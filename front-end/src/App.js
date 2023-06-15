@@ -1,4 +1,5 @@
 import Title from "./comps/Title";
+import UploadForm from "./comps/UploadForm";
 import tranGenerator from "./fake_data/tranGenerator";
 
 function App() {
@@ -8,6 +9,7 @@ function App() {
   return (
     <div className="App">
       <Title transactions={transactions} />
+      <UploadForm />
     </div>
   );
 }
