@@ -6,10 +6,12 @@ let jsonBodyParser = bodyParser.json();
 
 let registerUserRoute = async (req, res) => {
     const payload = req.body;
-    const userID = await registerUserInDB(payload.username, payload.password);
-    if (! userID) {res.sendStatus(400);}
-    res.status(200);
-    res.send({...payload, userID});
+    try {
+        const userID = await registerUserInDB(payload.username, payload.password);
+        res.status(200).send({...payload, userID});
+    } catch (error) {
+        res.status(400).send({...error, message: error.message});
+    }
 };
 
 let usersRouter = express.Router();
