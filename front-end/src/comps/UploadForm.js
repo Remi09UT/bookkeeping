@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
-// import ProgressBar from "./ProgressBar";
+import ProgressBar from "./ProgressBar";
 
 export default function UploadForm() {
   const [file, setFile] = useState(null);
@@ -23,13 +23,14 @@ export default function UploadForm() {
   return (
     <form>
       <Button variant="contained" component="label" onChange={changeHandler}>
-        Upload File
+        Upload
         <input type="file" hidden />
       </Button>
+      <span> Upload a picture!</span>
       <div className="output">
         {error && <Alert severity="warning">{error}</Alert>}
         {file && <div className="file">{file.name}</div>}
-        {/* {file && <ProgressBar file = {file} setFile = {setFile} />} */}
+        {file && <ProgressBar />}
       </div>
     </form>
   );
