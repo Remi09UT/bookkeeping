@@ -5,15 +5,19 @@ import tranGenerator from "./fake_data/tranGenerator";
 
 function App() {
   // fake transactions for testing only
-  const [transactions, setTransections] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   useEffect(() => {
     let fakeData = tranGenerator();
-    setTransections(fakeData);
-  });
+    setTransactions(fakeData);
+  }, []);
+
   return (
     <div className="App">
       <Title transactions={transactions} />
-      <UploadForm />
+      <UploadForm
+        transactions={transactions}
+        setTransactions={setTransactions}
+      />
     </div>
   );
 }

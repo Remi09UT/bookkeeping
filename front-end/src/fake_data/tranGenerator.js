@@ -3,22 +3,22 @@ function tranGenerator() {
     {
       date: "06/17/2023",
       description: "food",
-      amount: -98.67,
+      amount: -100.5,
     },
     {
       date: "06/22/2023",
       description: "travel",
-      amount: -1100,
+      amount: -100.5,
     },
     {
       date: "06/11/2023",
       description: "salary",
-      amount: 2000,
+      amount: 100.5,
     },
     {
       date: "06/10/2023",
       description: "grocery",
-      amount: -3000,
+      amount: 100.5,
     },
   ];
 }
