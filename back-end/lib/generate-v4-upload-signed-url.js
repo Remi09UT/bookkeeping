@@ -10,6 +10,9 @@ const bucketName = 'bookkeeping_bucket_0';
 // Imports the Google Cloud client library
 const {Storage} = require('@google-cloud/storage');
 
+const { V4SignedURLUnavailableError } = require('../lib/errors');
+
+
 // Creates a client
 const storage = new Storage();
 
@@ -39,6 +42,10 @@ async function getV4UploadSignedUrl(userID, fileName, contentType = 'application
         url = await generateV4UploadSignedUrl(filePath, contentType);
     } catch (error) {
         console.log(error);
+        throw new V4SignedURLUnavailableError(error.message || "Failed to get V4 upload signed URL (1)!");
+    }
+    if (! url) {
+        throw new V4SignedURLUnavailableError("Failed to get V4 upload signed URL (2)!");
     }
     return url;
 };

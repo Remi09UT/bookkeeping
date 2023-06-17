@@ -1,11 +1,5 @@
 const client = require('../lib/mongodb-atlas-client.js')
-
-class DuplicateUsernameError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = 'DuplicateUsername';
-    }
-}
+const {DuplicateUsernameError, UserDoesNotExistError} = require('../lib/errors');
 
 async function registerUserInDB(username, password) {
     try {
@@ -43,5 +37,27 @@ async function checkUsernameExistenceInDB(username) {
     }
 }
 
+async function getUserByUsernameInDB(username) {
+    try {
+        await client.connect();
+        const database = client.db("bookkeeping");
+        const collection = database.collection("users");
+        const doc = { username };
+        const result = await collection.findOne(doc);
+        if (! result) {
+            throw new UserDoesNotExistError(`Username does not exist: ${username}`);
+        }
+        return {userID: result._id.toString(), username: result.username, password: result.password };
+    } catch (error) {
+        console.log(error);
+        if (error.name === 'UserDoesNotExistError') {
+            throw error;
+        } else {
+            throw new Error("Unexpected error in getUserByUsernameInDB()!");
+        }
+    } finally {
+        await client.close();
+    }
+}
 
-module.exports = registerUserInDB;
+module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB};
