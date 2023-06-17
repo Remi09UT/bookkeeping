@@ -1,4 +1,4 @@
-import React from "react";
+import Grid from "@mui/material/Grid";
 
 const Title = ({ transactions }) => {
   const month = new Date().toLocaleString("en-US", { month: "long" });
@@ -6,6 +6,7 @@ const Title = ({ transactions }) => {
   let income = 0;
   let expense = 0;
   transactions.forEach((transaction) => {
+    balance += transaction.amount;
     if (transaction.amount > 0) {
       income += transaction.amount;
     } else {
@@ -17,21 +18,28 @@ const Title = ({ transactions }) => {
   const formattedExpense = expense.toFixed(2).toLocaleString();
 
   return (
-    <div className="title">
-      <h1>{month}</h1>
-      <h2>${formattedBalance}</h2>
-      <div className="income-expense">
-        <div>
-          <h3>Income</h3>
-          <p>{formattedIncome}</p>
-        </div>
-        <div>
-          <h3>Expense</h3>
-          <p>{formattedExpense}</p>
+    <>
+      <div className="title">
+        <h1>{month}</h1>
+        <h2>${formattedBalance}</h2>
+        <p>A penny saved is a penny earned.</p>
+      </div>
+
+      <div className="title2">
+        <div className="Grid">
+          <Grid container spacing={3}>
+            <Grid item xs={6}>
+              <h3>${formattedIncome}</h3>
+              <p>Income</p>
+            </Grid>
+            <Grid item xs={6}>
+              <h3>${formattedExpense}</h3>
+              <p>Expense</p>
+            </Grid>
+          </Grid>
         </div>
       </div>
-      <p>A penny saved is a penny earned.</p>
-    </div>
+    </>
   );
 };
 
