@@ -10,6 +10,7 @@ let getCloudStorageUploadURLRoute = async (req, res) => {
     const bucketfileName = generateBucketFileName(req.params.filename);
     const url = await getV4UploadSignedUrl(userID, bucketfileName);
     if (! url) {res.sendStatus(400)};
+    res.status(200);
     res.send({url});
 };
 

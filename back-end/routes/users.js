@@ -1,21 +1,20 @@
 const express = require('express');
+const registerUserInDB = require('../db/users');
+const bodyParser = require('body-parser');
 
-// let getUsersRoute = (req, res) => {
-//     res.send(users);
-// };
+let jsonBodyParser = bodyParser.json();
 
-// let getUserRoute = (req, res) => {
-//     let user = users.find(user => user.id === req.params.id);
-//     res.send(user);
-// };
-
-let registerUserRoute = (req, res) => {
-
+let registerUserRoute = async (req, res) => {
+    const payload = req.body;
+    const userID = await registerUserInDB(payload.username, payload.password);
+    if (! userID) {res.sendStatus(400);}
+    res.status(200);
+    res.send({...payload, userID});
 };
 
 let usersRouter = express.Router();
 
-// usersRouter.get('/:id', getUserRoute);
-// usersRouter.get('/', getUsersRoute);
+usersRouter.route('/register')
+    .put(jsonBodyParser, registerUserRoute);
 
 module.exports = usersRouter;
