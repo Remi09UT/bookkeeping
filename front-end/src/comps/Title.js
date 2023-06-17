@@ -6,7 +6,6 @@ const Title = ({ transactions }) => {
   let income = 0;
   let expense = 0;
   transactions.forEach((transaction) => {
-    balance += transaction.amount;
     if (transaction.amount > 0) {
       income += transaction.amount;
     } else {
