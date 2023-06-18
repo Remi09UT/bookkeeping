@@ -1,5 +1,6 @@
 const {AuthenticationFailureError, PasswordAuthenticationFailureError, JWTAuthenticationFailureError} = require('./errors');
 const {getUserByUsernameInDB} = require('../db/users');
+const jwt = require('jsonwebtoken');
 
 const signature = process.env.SIGNATURE;
 
