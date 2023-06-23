@@ -1,5 +1,5 @@
 const express = require('express');
-const registerUserInDB = require('../db/users');
+const {registerUserInDB} = require('../db/users');
 const bodyParser = require('body-parser');
 const createToken = require('../lib/create-token');
 const {requireAuth} = require('../lib/auth');
