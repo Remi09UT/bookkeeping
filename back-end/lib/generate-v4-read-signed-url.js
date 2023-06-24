@@ -16,17 +16,15 @@ const { V4SignedURLUnavailableError } = require('../lib/errors');
 // Creates a client
 const storage = new Storage();
 
-async function generateV4UploadSignedUrl(filePath, contentType = 'application/octet-stream') {
-  // These options will allow temporary uploading of the file with outgoing
-  // Content-Type: application/octet-stream header.
+async function generateV4ReadSignedUrl(filePath) {
+  // These options will allow temporary read access to the file
   const options = {
     version: 'v4',
-    action: 'write',
+    action: 'read',
     expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-    contentType: contentType,
   };
 
-  // Get a v4 signed URL for uploading file
+  // Get a v4 signed URL for reading the file
   const [url] = await storage
     .bucket(bucketName)
     .file(filePath)
@@ -35,19 +33,19 @@ async function generateV4UploadSignedUrl(filePath, contentType = 'application/oc
   return url;
 }
 
-async function getV4UploadSignedUrl(userID, fileName, contentType = 'application/octet-stream') {
+async function getV4ReadSignedUrl(userID, fileName) {
     const filePath = `${userID}/${fileName}`;
     let url = '';
     try {
-        url = await generateV4UploadSignedUrl(filePath, contentType);
+        url = await generateV4ReadSignedUrl(filePath);
     } catch (error) {
         console.log(error);
-        throw new V4SignedURLUnavailableError(error.message || "Failed to get V4 upload signed URL (1)!");
+        throw new V4SignedURLUnavailableError(error.message || "Failed to get V4 read signed URL (1)!");
     }
     if (! url) {
-        throw new V4SignedURLUnavailableError("Failed to get V4 upload signed URL (2)!");
+        throw new V4SignedURLUnavailableError("Failed to get V4 read signed URL (2)!");
     }
     return url;
 };
 
-module.exports = getV4UploadSignedUrl;
+module.exports = getV4ReadSignedUrl;

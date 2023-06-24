@@ -13,14 +13,14 @@ const { requireAuth } = require('../lib/auth');
  */
 let getCloudStorageUploadURLRoute = async (req, res) => {
     const userID = req.user.userID;
-    const bucketfileName = generateBucketFileName(req.params.filename);
+    const bucketFileName = generateBucketFileName(req.params.filename);
     let url;
     try {
-        url = await getV4UploadSignedUrl(userID, bucketfileName);
+        url = await getV4UploadSignedUrl(userID, bucketFileName);
     } catch (error) {
         res.status(error.status || 400).send({...error, message: error.message});
     }
-    res.status(201).send({url});
+    res.status(201).send({bucketFileName, url});
 };
 
 let uploadsRouter = express.Router();

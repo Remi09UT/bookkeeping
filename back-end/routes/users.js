@@ -30,7 +30,7 @@ let loginUserRoute = async (req, res) => {
     const user = req.user;
     const token = createToken(user);
     res.status(201).send({token});
-}
+};
 
 let usersRouter = express.Router();
 

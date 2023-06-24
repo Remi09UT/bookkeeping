@@ -1,4 +1,4 @@
-const client = require('../lib/mongodb-atlas-client.js')
+const client = require('../lib/mongodb-atlas-client.js');
 const {DuplicateUsernameError, UserDoesNotExistError} = require('../lib/errors');
 
 async function registerUserInDB(username, password) {
