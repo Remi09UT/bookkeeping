@@ -10,6 +10,15 @@ const bucketName = process.env.BUCKET_NAME;
 
 let jsonBodyParser = bodyParser.json();
 
+let bucketFileNameChecker = (req, res, next) => {
+    bucketFileName = req.body.bucketFileName;
+    if (! bucketFileName) {
+        res.status(500).send({message: "bucketFileName is not in request body!"});
+        return;
+    }
+    next();
+};
+
 let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to process the record metadata.
     const userID = req.user.userID;
     const requestBody = req.body;
@@ -39,7 +48,7 @@ let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to 
 let receiptsRouter = express.Router();
 
 receiptsRouter.route('/')
-    .post(requireAuth, jsonBodyParser, fileTypeChecker, userAddReceiptRoute);
+    .post(requireAuth, jsonBodyParser, bucketFileNameChecker, fileTypeChecker, userAddReceiptRoute);
 
 
 module.exports = receiptsRouter;

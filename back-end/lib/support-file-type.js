@@ -13,12 +13,12 @@ const EXTENSION = {
 
 // const MIME_TYPE = ["application/pdf", "image/gif", "image/tiff", "image/jpeg", "image/png", "image/bmp", "image/webp"];
 
-let fileTypeChecker = async (req, res, next) => {
+let fileTypeChecker = (req, res, next) => {
     let fileType = req.body.fileType;
     if (! fileType) {
         fileName = req.body.bucketFileName || req.params.filename;
         if (! fileName) {
-            res.status(500).send("Either fileName not in URI or bucketFileName is not in request body!");
+            res.status(500).send({message: "Either fileName not in URI or bucketFileName is not in request body!"});
             return;
         }
         fileType = fileName.substring(fileName.lastIndexOf('.') + 1);
