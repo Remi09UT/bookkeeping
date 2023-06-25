@@ -7,6 +7,7 @@ npm install uuid
 npm install body-parser
 npm install mongodb
 npm install jsonwebtoken
+npm install @google-cloud/documentai
 
 // back-end run
 npx nodemon index.js

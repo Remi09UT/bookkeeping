@@ -44,4 +44,29 @@ class V4SignedURLUnavailableError extends Error {
     }
 }
 
-module.exports = {DuplicateUsernameError, UserDoesNotExistError, AuthenticationFailureError, PasswordAuthenticationFailureError, JWTAuthenticationFailureError, V4SignedURLUnavailableError};
+class FileDoesNotExistError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'FileDoesNotExistError';
+        this.status = 404;
+    }
+}
+
+class CloudStorageFileDoesNotExistError extends FileDoesNotExistError {
+    constructor(message) {
+        super(message);
+        this.name = 'CloudStorageFileDoesNotExistError';
+        this.status = 404;
+    }
+}
+
+class LocalStorageFileDoesNotExistError extends FileDoesNotExistError {
+    constructor(message) {
+        super(message);
+        this.name = 'LocalStorageFileDoesNotExistError';
+        this.status = 404;
+    }
+}
+
+module.exports = {DuplicateUsernameError, UserDoesNotExistError, AuthenticationFailureError, PasswordAuthenticationFailureError, 
+    JWTAuthenticationFailureError, V4SignedURLUnavailableError, CloudStorageFileDoesNotExistError, LocalStorageFileDoesNotExistError};

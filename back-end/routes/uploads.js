@@ -2,9 +2,10 @@ const express = require('express');
 const getV4UploadSignedUrl = require('../lib/generate-v4-upload-signed-url');
 const generateBucketFileName = require('../lib/generate-bucket-file-name');
 const { requireAuth } = require('../lib/auth');
-// const bodyParser = require('body-parser');
+const {fileTypeChecker} = require('../lib/support-file-type');
+const bodyParser = require('body-parser');
 
-// let jsonBodyParser = bodyParser.json();
+let jsonBodyParser = bodyParser.json();
 
 /**
  * Get GCP Cloud Storage upload URL route
@@ -26,6 +27,6 @@ let getCloudStorageUploadURLRoute = async (req, res) => {
 let uploadsRouter = express.Router();
 
 uploadsRouter.route('/static/:filename')
-    .get(requireAuth, getCloudStorageUploadURLRoute);
+    .get(requireAuth, jsonBodyParser, fileTypeChecker, getCloudStorageUploadURLRoute);
 
 module.exports = uploadsRouter;
