@@ -11,7 +11,7 @@ const bucketName = process.env.BUCKET_NAME;
 let jsonBodyParser = bodyParser.json();
 
 let bucketFileNameChecker = (req, res, next) => {
-    bucketFileName = req.body.bucketFileName;
+    const bucketFileName = req.body.bucketFileName;
     if (! bucketFileName) {
         res.status(500).send({message: "bucketFileName is not in request body!"});
         return;
