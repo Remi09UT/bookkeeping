@@ -1,14 +1,16 @@
 const client = require('../lib/mongodb-atlas-client.js');
-const {DuplicateUsernameError, UserDoesNotExistError} = require('../lib/errors');
+const {DuplicateUsernameError, UserDoesNotExistError, UserReceiptArrayUpdateFailureError} = require('../lib/errors');
+const { ObjectId } = require('mongodb');
 
 async function registerUserInDB(username, password) {
     try {
         await client.connect();
         const database = client.db("bookkeeping");
         const collection = database.collection("users");
-        const doc = { username, password };
+        const receiptIDs = [];
+        const doc = { username, password, receiptIDs };
         const result = await collection.insertOne(doc);
-        return result.insertedId;
+        return result.insertedId.toString();
     } catch (error) {
         console.log(error);
         if (error.name === 'MongoServerError' && error.code === 11000 && error.keyValue.username === username) {
@@ -21,7 +23,7 @@ async function registerUserInDB(username, password) {
     }
 }
 
-async function checkUsernameExistenceInDB(username) {
+async function checkUsernameExistenceInDB(username) { // result format unchecked
     try {
         await client.connect();
         const database = client.db("bookkeeping");
@@ -60,4 +62,74 @@ async function getUserByUsernameInDB(username) {
     }
 }
 
-module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB};
+async function addUserReceiptInDB(userID, receiptID) { // How to ensure receiptID uniqueness in receiptIDs array?
+    try {
+        await client.connect();
+        const database = client.db("bookkeeping");
+        const collection = database.collection("users");
+        const filter = { _id: new ObjectId(userID) };
+        const options = { 
+            upsert: false,
+            returnDocument: 'after',
+            projection: {receiptIDs: 1}
+        };
+        const updateDoc = {
+            $addToSet: { receiptIDs: receiptID } 
+        };
+        const result = await collection.findOneAndUpdate(filter, updateDoc, options);
+        if (! result) {
+            throw new UserDoesNotExistError(`userID does not exist: ${userID}.`);
+        } else if (! result.value.receiptIDs.includes(receiptID)) {
+            throw new UserReceiptArrayUpdateFailureError(`Failed to add receipt ID ${receiptID} to ${userID}.`);
+        }
+        return result.value.receiptIDs;
+    } catch (error) {
+        console.log(error);
+        if (error.name === 'UserDoesNotExistError') {
+            throw error;
+        } else if (error.name === 'UserReceiptArrayUpdateFailureError') {
+            throw error;
+        } else {
+            throw new Error("Unexpected error in addUserReceiptInDB()!");
+        }
+    } finally {
+        await client.close();
+    }
+}
+
+async function removeUserReceiptInDB(userID, receiptID) {
+    try {
+        await client.connect();
+        const database = client.db("bookkeeping");
+        const collection = database.collection("users");
+        const filter = { _id: new ObjectId(userID) };
+        const options = { 
+            upsert: false,
+            returnDocument: 'after',
+            projection: {receiptIDs: 1}
+        };
+        const updateDoc = {
+            $pull: { receiptIDs: receiptID } 
+        };
+        const result = await collection.findOneAndUpdate(filter, updateDoc, options);
+        if (! result) {
+            throw new UserDoesNotExistError(`userID does not exist: ${userID}.`);
+        } else if (result.value.receiptIDs.includes(receiptID)) {
+            throw new UserReceiptArrayUpdateFailureError(`Failed to remove receipt ID ${receiptID} from ${userID}.`);
+        }
+        return result.value.receiptIDs;
+    } catch (error) {
+        console.log(error);
+        if (error.name === 'UserDoesNotExistError') {
+            throw error;
+        } else if (error.name === 'UserReceiptArrayUpdateFailureError') {
+            throw error;
+        } else {
+            throw new Error("Unexpected error in removeUserReceiptInDB()!");
+        }
+    } finally {
+        await client.close();
+    }
+}
+
+module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB, addUserReceiptInDB, removeUserReceiptInDB};
