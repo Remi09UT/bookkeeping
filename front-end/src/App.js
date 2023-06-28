@@ -1,30 +1,21 @@
-import { useEffect, useState } from "react";
-import Title from "./comps/Title";
-import UploadForm from "./comps/UploadForm";
-import tranGenerator from "./fake_data/tranGenerator";
-import Table from "./comps/Table";
-import Modal from "./comps/Modal";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './Home';
+import LoginPage from './comps/LoginPage';
+import RegisterPage from './comps/RegisterPage';
+import { useState } from 'react';
+
 
 function App() {
-  const[img, setImg] = useState(null);
-
-  // fake transactions for testing only
-  const [transactions, setTransactions] = useState([]);
-  useEffect(() => {
-    let fakeData = tranGenerator();
-    setTransactions(fakeData);
-  }, []);
-
+  const [credential, setCredential] = useState("");
   return (
-    <div className="App">
-      <Title transactions={transactions} />
-      <UploadForm
-        transactions={transactions}
-        setTransactions={setTransactions}
-      />
-      <Table setImg = {setImg}/>
-      {img && <Modal src = {img} setImg = {setImg}/>}
-    </div>
+    <Router>
+      <Routes>
+        <Route exact path="/Login" element={<LoginPage credential={credential} setCredential={setCredential}/>} />
+        <Route path="/Register" element={<RegisterPage />} />
+        <Route path="/Home" element={<Home credential={credential}/>} />
+      </Routes>
+    </Router>
   );
 }
 

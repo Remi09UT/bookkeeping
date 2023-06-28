@@ -6,7 +6,10 @@
   --background: #A3E4D7;
 }
 
+
 /* base styles & title */
+
+
 body{
   font-family: 'Montserrat', sans-serif;
   color: var(--primary);
