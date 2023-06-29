@@ -7,6 +7,7 @@ import ProgressBar from "./ProgressBar";
 export default function UploadForm({ transactions, setTransactions }) {
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState("Upload a picture!");
 
   const types = ["image/png", "image/jpeg"];
   const changeHandler = (e) => {
@@ -26,7 +27,7 @@ export default function UploadForm({ transactions, setTransactions }) {
         Upload
         <input type="file" hidden />
       </Button>
-      <span> Upload a picture!</span>
+      <span> {status} </span>
       <div className="output">
         {error && <Alert severity="warning">{error}</Alert>}
         {file && <div className="file">{file.name}</div>}
@@ -36,6 +37,7 @@ export default function UploadForm({ transactions, setTransactions }) {
             setFile={setFile}
             transactions={transactions}
             setTransactions={setTransactions}
+            setStatus={setStatus}
           />
         )}
       </div>

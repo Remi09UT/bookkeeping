@@ -20,8 +20,13 @@ function LoginPage() {
   useEffect(() => {
     if (credential || sessionStorage.getItem("bookKeepingCredential")) {
       console.log(sessionStorage.getItem("bookKeepingCredential"));
-      sessionStorage.setItem("bookKeepingCredential", credential);
       window.location.href = "./Home";
+    }
+    if (
+      credential &&
+      credential != sessionStorage.getItem("bookKeepingCredential")
+    ) {
+      sessionStorage.setItem("bookKeepingCredential", credential);
     }
   }, [credential]);
 
@@ -47,7 +52,11 @@ function LoginPage() {
     //     // Handle error
     //     console.log(error);
     //   });
-    setCredential("fake JWT");
+    if (username === "aaa" && password == "bbb") {
+      setCredential("fake JWT");
+    } else {
+      alert("Wrong account or password");
+    }
   }
 
   return (

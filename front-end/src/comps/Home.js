@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import Title from "./comps/Title";
-import UploadForm from "./comps/UploadForm";
-import tranGenerator from "./fake_data/tranGenerator";
-import Table from "./comps/Table";
-import Modal from "./comps/Modal";
-import LoginPage from "./comps/LoginPage";
+import Title from "./Title";
+import UploadForm from "./UploadForm";
+import tranGenerator from "../fake_data/tranGenerator";
+import Table from "./Table";
+import Modal from "./Modal";
+import LoginPage from "./LoginPage";
 
 function Home() {
   const [img, setImg] = useState(null);
@@ -17,8 +17,7 @@ function Home() {
   }, []);
 
   console.log(
-    "home page + credential:",
-    sessionStorage.getItem("bookKeepingCredential")
+    "home page + credential:" + sessionStorage.getItem("bookKeepingCredential")
   );
   // if(!credential) {
   //   return <LoginPage />
