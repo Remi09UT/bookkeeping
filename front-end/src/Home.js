@@ -6,8 +6,8 @@ import Table from "./comps/Table";
 import Modal from "./comps/Modal";
 import LoginPage from "./comps/LoginPage";
 
-function Home({credential}) {
-  const[img, setImg] = useState(null);
+function Home() {
+  const [img, setImg] = useState(null);
 
   // fake transactions for testing only
   const [transactions, setTransactions] = useState([]);
@@ -16,10 +16,13 @@ function Home({credential}) {
     setTransactions(fakeData);
   }, []);
 
-  console.log(credential);
-  if(!credential) {
-    return <LoginPage />
-  }
+  console.log(
+    "home page + credential:",
+    sessionStorage.getItem("bookKeepingCredential")
+  );
+  // if(!credential) {
+  //   return <LoginPage />
+  // }
   return (
     <div className="App">
       <Title transactions={transactions} />
@@ -27,8 +30,8 @@ function Home({credential}) {
         transactions={transactions}
         setTransactions={setTransactions}
       />
-      <Table setImg = {setImg}/>
-      {img && <Modal src = {img} setImg = {setImg}/>}
+      <Table setImg={setImg} />
+      {img && <Modal src={img} setImg={setImg} />}
     </div>
   );
 }

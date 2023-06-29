@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
-import RegisterPage from "./RegisterPage";
 import axios from "axios";
 import {
   MDBBtn,
@@ -14,39 +12,42 @@ import {
   MDBIcon,
 } from "mdb-react-ui-kit";
 
-function LoginPage({credential, setCredential}) {
+function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [credential, setCredential] = useState("");
 
-  
-  useEffect(() => {//credential && (window.location.href = "./Home"); 
-  console.log(credential)},[credential]);
-  
+  useEffect(() => {
+    if (credential || sessionStorage.getItem("bookKeepingCredential")) {
+      console.log(sessionStorage.getItem("bookKeepingCredential"));
+      sessionStorage.setItem("bookKeepingCredential", credential);
+      window.location.href = "./Home";
+    }
+  }, [credential]);
+
   function handleLogin() {
     let value = username + " " + password;
     let encodedValue = btoa(value);
 
-    /*
-    axios
-      .get("http://127.0.0.1:3000/users/login", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${encodedValue}`,
-          // Add any additional headers if required
-        },
-      })
-      .then((response) => {
-        // Handle success
-        console.log(response.data);
-        setCredential("fake JWT");
-        
-      })
-      .catch((error) => {
-        // Handle error
-        console.log(error);
-      });*/
+    // axios
+    //   .get("http://127.0.0.1:3000/users/login", {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Basic ${encodedValue}`,
+    //       // Add any additional headers if required
+    //     },
+    //   })
+    //   .then((response) => {
+    //     // Handle success
+    //     console.log(response.data);
+    //     setCredential("fake JWT");
+
+    //   })
+    //   .catch((error) => {
+    //     // Handle error
+    //     console.log(error);
+    //   });
     setCredential("fake JWT");
-    
   }
 
   return (
