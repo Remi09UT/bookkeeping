@@ -31,12 +31,13 @@ function RegisterPage() {
             alert('Register successful!')
             window.location.href = 'http://127.0.0.1:3000/users/login';
         }
-        else if(response.data.status === 422) {
-            alert(`User ${username} already existed! Try a new username`)
-        }
+        
       })
       .catch((error) => {
         // Handle any errors that occurred during the request
+        if(error.data.status === 422) {
+          alert(`User ${username} already existed! Try a new username`)
+       }
         console.error(error);
       });
   }
