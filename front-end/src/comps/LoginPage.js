@@ -18,15 +18,16 @@ function LoginPage() {
   const [credential, setCredential] = useState("");
 
   useEffect(() => {
-    if (credential || sessionStorage.getItem("bookKeepingCredential")) {
-      console.log(sessionStorage.getItem("bookKeepingCredential"));
-      window.location.href = "./Home";
-    }
     if (
       credential &&
       credential != sessionStorage.getItem("bookKeepingCredential")
     ) {
       sessionStorage.setItem("bookKeepingCredential", credential);
+    }
+
+    if (credential || sessionStorage.getItem("bookKeepingCredential")) {
+      console.log(sessionStorage.getItem("bookKeepingCredential"));
+      window.location.href = "./Home";
     }
   }, [credential]);
 
