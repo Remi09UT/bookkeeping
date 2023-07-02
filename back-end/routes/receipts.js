@@ -5,7 +5,7 @@ const { addReceiptInDB, getReceiptInDB, removeReceiptInDB } = require('../db/rec
 const getV4ReadSignedUrl = require('../lib/generate-v4-read-signed-url');
 const analyzeFileByDocumentAI = require('../lib/document-ai');
 const {fileTypeChecker, getContentType} = require('../lib/support-file-type');
-const { addUserReceiptInDB, removeUserReceiptInDB } = require('../db/users');
+const { addReceiptToUserInDB, removeUserReceiptInDB } = require('../db/users');
 const deleteFile = require('../lib/cloud-storage-file-delete');
 
 const bucketName = process.env.BUCKET_NAME;
@@ -29,7 +29,7 @@ let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to 
     const fileName = bucketFileName.substring(37);
     const dateAdded = new Date();
     const dateLastModified = dateAdded;
-    const imageURL = `https://storage.cloud.google.com/${bucketName}/${userID}/${bucketFileName}`; // Incorrect URL leads to 404 not found!
+    const imageURL = `https://storage.cloud.google.com/${bucketName}/${userID}/${bucketFileName}`; // Incorrect URL leads to 404 not found! // Check if necessary to record.
     // Document AI
     let receiptContent;
     try {
@@ -42,7 +42,7 @@ let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to 
     const doc = {userID, contentType, fileName, bucketFileName, imageURL, receiptContent, dateAdded, dateLastModified};
     try {
         const receiptID = await addReceiptInDB(doc);
-        const receiptIDs = await addUserReceiptInDB(userID, receiptID);
+        const receiptIDs = await addReceiptToUserInDB(userID, receiptID);
         // const clientGetImageURL = await getV4ReadSignedUrl(userID, bucketFileName); // check if necessary, or return to client an image processed by the Document AI
         res.status(201).send({...doc, receiptID, receiptIDs, message: "TO BE MODIFIED!"}); // check receiptID key repetition in returned doc
     } catch (error) {

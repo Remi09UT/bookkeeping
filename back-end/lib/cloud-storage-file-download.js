@@ -16,20 +16,18 @@ const {Storage} = require('@google-cloud/storage');
 // Creates a client
 const storage = new Storage();
 
-const tempFilePath = process.env.TEMP_FILE_PATH;
-
 const bucketName = process.env.BUCKET_NAME;
 
-async function downloadFile(userID, fileName) {
+async function downloadFile(cloudPath, localPath) {
   const options = {
-    destination: tempFilePath+userID+fileName,
+    destination: localPath,
   };
 
   // Downloads the file
-  await storage.bucket(bucketName).file(`${userID}/${fileName}`).download(options);
+  await storage.bucket(bucketName).file(cloudPath).download(options);
 
   console.log(
-    `Downloaded ${userID+fileName}.`
+    `Downloaded ${localPath}.`
   );
 }
 

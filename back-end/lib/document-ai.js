@@ -1,5 +1,4 @@
-const downloadFile = require('./cloud-storage-file-download');
-const { CloudStorageFileDoesNotExistError, LocalStorageFileDoesNotExistError } = require('./errors');
+const { cloudStorageEncodedFileProvider } = require('./file-processor');
 
 /**
  * TODO(developer): Uncomment these variables before running the sample.
@@ -7,6 +6,11 @@ const { CloudStorageFileDoesNotExistError, LocalStorageFileDoesNotExistError } =
 const projectId = process.env.GCP_PROJECT_ID;
 const location = process.env.GCP_PROJECT_LOCATION; // Format is 'us' or 'eu'
 const processorId = process.env.DOCUMENT_AI_PROCESSOR_ID; // Create processor in Cloud Console
+
+// The full resource name of the processor, e.g.:
+// projects/project-id/locations/location/processor/processor-id
+// You must create new processors in the Cloud Console first
+const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
 
 const {DocumentProcessorServiceClient} =
   require('@google-cloud/documentai').v1;
@@ -16,37 +20,8 @@ const {DocumentProcessorServiceClient} =
 // const client = new DocumentProcessorServiceClient({apiEndpoint: 'eu-documentai.googleapis.com'});
 const client = new DocumentProcessorServiceClient({apiEndpoint: 'us-documentai.googleapis.com'});
 
-const tempFilePath = process.env.TEMP_FILE_PATH;
-
 async function analyzeFileByDocumentAI(userID, fileName, contentType) {
-  // The full resource name of the processor, e.g.:
-  // projects/project-id/locations/location/processor/processor-id
-  // You must create new processors in the Cloud Console first
-  const name = `projects/${projectId}/locations/${location}/processors/${processorId}`;
-  try {
-    await downloadFile(userID, fileName);
-  } catch (error) {
-    if (error.code === 404) {
-        throw new CloudStorageFileDoesNotExistError(error);
-    } else {
-        throw new Error("Unexpected error in downloadFile() in analyzeFileByDocumentAI()!");
-    }
-  }
-  // Read the file into memory.
-  const fs = require('fs').promises;
-  let imageFile;
-  try {
-    imageFile = await fs.readFile(tempFilePath+userID+fileName);
-  } catch (error) {
-    if (error.errno === -2 && error.code === 'ENOENT') {
-      throw new LocalStorageFileDoesNotExistError(`Cloud Storage downloaded file ${userID+fileName} is missing in readFile() in analyzeFileByDocumentAI()!`);
-    } else {
-      throw new Error("Unexpected error in readFile() in analyzeFileByDocumentAI()!");
-    }
-  }
-
-  // Convert the image data to a Buffer and base64 encode it.
-  const encodedImage = Buffer.from(imageFile).toString('base64');
+  const encodedImage = await cloudStorageEncodedFileProvider(userID, fileName);
 
   const request = {
     name,
@@ -67,44 +42,82 @@ async function analyzeFileByDocumentAI(userID, fileName, contentType) {
   const {document} = result;
 
   // Get all of the document text as one big string
-  const {text} = document;
+  const {entities} = document;
 
-  // Extract shards from the text field
-  const getText = textAnchor => {
-    if (!textAnchor.textSegments || textAnchor.textSegments.length === 0) {
-      return '';
-    }
+  return {entities, selectedEntities: extractEntities(entities)};
+}
 
-    // First shard in document doesn't have startIndex property
-    const startIndex = textAnchor.textSegments[0].startIndex || 0;
-    const endIndex = textAnchor.textSegments[0].endIndex;
+const matchEntityTypes = ['supplier_name', 'supplier_address', 'supplier_phone', 'invoice_date', 'net_amount', 'total_tax_amount', 'total_amount', 'currency', 'invoice_type'];
+const lineItemEntityTypes = ['line_item', 'line_item/description', 'line_item/amount', 'line_item/quantity', 'line_item/unit_price'];
 
-    return text.substring(startIndex, endIndex);
+function extractEntities(entities) {
+  let selectedEntities = [];
+  let lineItemEntities = [];
+  for (const entity of entities) {
+      const type = entity.type;
+      if (! matchEntityTypes.includes(type) && ! lineItemEntityTypes.includes(type)) {
+        continue;
+      } else if (type === 'invoice_date' || type === 'invoice_type') {
+        selectedEntities.push({
+            type,
+            value: entity.normalizedValue.text
+        });
+      } else if (matchEntityTypes.includes(type)) {
+        selectedEntities.push({
+            type,
+            value: entity.mentionText || entity.normalizedValue.text
+        });
+      } else if (lineItemEntityTypes.includes(type)) {
+        lineItemEntities.push({
+            lineItemString: entity.mentionText || entity.normalizedValue.text,
+            lineItemProperties: entity.properties
+        });
+      } else {
+        console.log(`Unhandled entity ${entity}.`)
+      }
+  }
+  for (const entity of lineItemEntities) {
+      let currentLineItemEntity = getNullLineItemObject();
+      const lineItemString = entity.lineItemString;
+      const lineItemProperties = entity.lineItemProperties;
+      currentLineItemEntity['line_string'] = lineItemString;
+      for (const property of lineItemProperties) {
+          const type = property.type;
+          const value = property.mentionText || property.normalizedValue.text;
+          switch (type) {
+              case "line_item/quantity":
+                  currentLineItemEntity['quantity'] = value;
+                  break;
+              case "line_item/description":
+                  if (currentLineItemEntity['description']) {
+                      currentLineItemEntity['description'] += ' ';
+                  }
+                  currentLineItemEntity['description'] += value;
+                  break;
+              case "line_item/unit_price":
+                  currentLineItemEntity['unit_price'] = value;
+                  break;
+              case "line_item/amount":
+                  currentLineItemEntity['amount'] = value;
+                  break;
+          }
+      }
+      selectedEntities.push({
+          type: 'line_item',
+          value: currentLineItemEntity
+      });
+  }
+  return selectedEntities;
+}
+
+function getNullLineItemObject() {
+  return {
+    "line_string": null,
+    "quantity": null,
+    "description": "",
+    "unit_price": null,
+    "amount": null
   };
-
-  // Read the text recognition output from the processor
-  console.log('The document contains the following paragraphs:');
-  const [page1] = document.pages;
-  const {paragraphs} = page1;
-  let anaRes = [];
-
-  for (const paragraph of paragraphs) {
-    const paragraphText = getText(paragraph.layout.textAnchor);
-    anaRes.push(paragraphText);
-  }
-
-  try {
-    fs.unlink(tempFilePath+userID+fileName, function (err) {
-        if (err) throw err;
-        // if no error, file has been deleted successfully
-        console.log(`Deleted ${userID+fileName}.`);
-    });
-  } catch (error) {
-    console.log(error);
-    console.log("WARNING: failed to delete temporary file!");
-  }
-
-  return {anaRes};
 }
 
 module.exports = analyzeFileByDocumentAI;

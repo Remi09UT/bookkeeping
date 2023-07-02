@@ -62,7 +62,7 @@ async function getUserByUsernameInDB(username) {
     }
 }
 
-async function addUserReceiptInDB(userID, receiptID) { // How to ensure receiptID uniqueness in receiptIDs array?
+async function addReceiptToUserInDB(userID, receiptID) { // How to ensure receiptID uniqueness in receiptIDs array?
     try {
         await client.connect();
         const database = client.db("bookkeeping");
@@ -132,4 +132,4 @@ async function removeUserReceiptInDB(userID, receiptID) {
     }
 }
 
-module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB, addUserReceiptInDB, removeUserReceiptInDB};
+module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB, addReceiptToUserInDB, removeUserReceiptInDB};
