@@ -97,7 +97,7 @@ async function addReceiptToUserInDB(userID, receiptID) { // How to ensure receip
     }
 }
 
-async function removeUserReceiptInDB(userID, receiptID) {
+async function removeReceiptFromUserInDB(userID, receiptID) {
     try {
         await client.connect();
         const database = client.db("bookkeeping");
@@ -125,11 +125,11 @@ async function removeUserReceiptInDB(userID, receiptID) {
         } else if (error.name === 'UserReceiptArrayUpdateFailureError') {
             throw error;
         } else {
-            throw new Error("Unexpected error in removeUserReceiptInDB()!");
+            throw new Error("Unexpected error in removeReceiptFromUserInDB()!");
         }
     } finally {
         await client.close();
     }
 }
 
-module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB, addReceiptToUserInDB, removeUserReceiptInDB};
+module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB, addReceiptToUserInDB, removeReceiptFromUserInDB};

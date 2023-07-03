@@ -5,7 +5,7 @@ const { addReceiptInDB, getReceiptInDB, removeReceiptInDB } = require('../db/rec
 const getV4ReadSignedUrl = require('../lib/generate-v4-read-signed-url');
 const analyzeFileByDocumentAI = require('../lib/document-ai');
 const {fileTypeChecker, getContentType} = require('../lib/support-file-type');
-const { addReceiptToUserInDB, removeUserReceiptInDB } = require('../db/users');
+const { addReceiptToUserInDB, removeReceiptFromUserInDB } = require('../db/users');
 const deleteFile = require('../lib/cloud-storage-file-delete');
 
 const bucketName = process.env.BUCKET_NAME;
@@ -39,14 +39,14 @@ let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to 
         return;
     }
     // Add to MongoDB Atlas
-    const doc = {userID, contentType, fileName, bucketFileName, imageURL, receiptContent, dateAdded, dateLastModified};
+    const doc = {userID, contentType, fileName, bucketFileName, imageURL, dateAdded, dateLastModified, analyzedResults: receiptContent['selectedEntities']};
+    res.status(201).send({...doc, message: "The receipt record will appear on your account in a few seconds."}); // check receiptID key repetition in returned doc
     try {
-        const receiptID = await addReceiptInDB(doc);
+        const receiptID = await addReceiptInDB({...doc, analyzedResults: receiptContent});
         const receiptIDs = await addReceiptToUserInDB(userID, receiptID);
         // const clientGetImageURL = await getV4ReadSignedUrl(userID, bucketFileName); // check if necessary, or return to client an image processed by the Document AI
-        res.status(201).send({...doc, receiptID, receiptIDs, message: "TO BE MODIFIED!"}); // check receiptID key repetition in returned doc
     } catch (error) {
-        res.status(error.status || 400).send({...error, message: error.message});
+        console.log({...error, message: error.message});
     }
 };
 
@@ -76,7 +76,7 @@ let userRemoveReceiptRoute = async (req, res) => {
     // Remove from MongoDB Atlas
     try {
         await removeReceiptInDB(receiptID);
-        const receiptIDs = await removeUserReceiptInDB(userID, receiptID);
+        const receiptIDs = await removeReceiptFromUserInDB(userID, receiptID);
         res.status(200).send({receiptIDs});
     } catch (error) {
         res.status(error.status || 400).send({...error, message: error.message || `Error in userRemoveReceiptRoute() for user ${userID} removing record ${receiptID} in DB!`});
