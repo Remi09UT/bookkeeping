@@ -1,7 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
 const bodyParser = require('body-parser');
-const { addReceiptInDB, getReceiptInDB, removeReceiptInDB } = require('../db/receipts');
+const { addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB } = require('../db/receipts');
 const getV4ReadSignedUrl = require('../lib/generate-v4-read-signed-url');
 const analyzeFileByDocumentAI = require('../lib/document-ai');
 const {fileTypeChecker, getContentType} = require('../lib/support-file-type');
@@ -84,23 +84,79 @@ let userRemoveReceiptRoute = async (req, res) => {
 };
 
 let userGetReceiptRoute = async (req, res) => {
-
+    const userID = req.user.userID;
+    const receiptID = req.params.receipt_id;
+    // Get document from MongoDB Atlas
+    let receiptRecord;
+    try {
+        receiptRecord = await getReceiptInDB(receiptID);
+    } catch (error) {
+        res.status(error.status || 400).send({...error, message: error.message || `Error in userGetReceiptRoute() for user ${userID} retrieving record ${receiptID} in DB!`});
+        return;
+    }
+    if (userID !== receiptRecord.userID) {
+        res.status(404).send({"message": `User ${userID} does not have receipt record ${receiptID}!`});
+        return;
+    }
+    res.status(200).send({...receiptRecord, analyzedResults: receiptRecord.analyzedResults['selectedEntities']});
 };
 
 let userGetAllReceiptsRoute = async (req, res) => {
-
+    const userID = req.user.userID;
+    // Get document from MongoDB Atlas
+    let receiptRecords;
+    try {
+        receiptRecords = await getReceiptsInDB(userID);
+    } catch (error) {
+        res.status(error.status || 400).send({...error, message: error.message || `Error in userGetAllReceiptsRoute() for user ${userID} retrieving record ${receiptID} in DB!`});
+        return;
+    }
+    receiptRecords = receiptRecords.map((record) => {
+        return {...record, analyzedResults: record.analyzedResults['selectedEntities']};
+    });
+    res.status(200).send({expenseSummary: calculateExpenseSummary(receiptRecords), receiptRecords});
 };
 
 let userModifyReceiptRoute = async (req, res) => {
+    
+};
 
+let calculateExpenseSummary = (receiptRecords) => {
+    let expenseSummary = {
+        expenseSum: 0,
+        years: {}
+    };
+    for (const record of receiptRecords) {
+        const date = record.analyzedResults.invoice_date || record.dateAdded.toISOString().substring(0, 10);
+        const year = parseInt(date.substring(0, 4));
+        const month = parseInt(date.substring(5, 7));
+        const expense = parseFloat(record.analyzedResults.total_amount || 0);
+        expenseSummary['expenseSum'] += expense;
+        if (! expenseSummary['years'][year]) {
+            expenseSummary['years'][year] = {
+                yearlyExpenseSum: 0,
+                months: {}
+            };
+        }
+        expenseSummary['years'][year]['yearlyExpenseSum'] += expense;
+        if (! expenseSummary['years'][year]['months'][month]) {
+            expenseSummary['years'][year]['months'][month] = {
+                monthlyExpenseSum: 0,
+            };
+        }
+        expenseSummary['years'][year]['months'][month]['monthlyExpenseSum'] += expense;
+    }
+    return expenseSummary;
 };
 
 let receiptsRouter = express.Router();
 
 receiptsRouter.route('/')
+    .get(requireAuth, userGetAllReceiptsRoute)
     .post(requireAuth, jsonBodyParser, bucketFileNameChecker, fileTypeChecker, userAddReceiptRoute);
 
 receiptsRouter.route('/:receipt_id')
+    .get(requireAuth, userGetReceiptRoute)
     .delete(requireAuth, userRemoveReceiptRoute);
 
 

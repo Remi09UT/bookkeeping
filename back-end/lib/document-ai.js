@@ -51,22 +51,16 @@ const matchEntityTypes = ['supplier_name', 'supplier_address', 'supplier_phone',
 const lineItemEntityTypes = ['line_item', 'line_item/description', 'line_item/amount', 'line_item/quantity', 'line_item/unit_price'];
 
 function extractEntities(entities) {
-  let selectedEntities = [];
+  let selectedEntities = {};
   let lineItemEntities = [];
   for (const entity of entities) {
       const type = entity.type;
       if (! matchEntityTypes.includes(type) && ! lineItemEntityTypes.includes(type)) {
         continue;
       } else if (type === 'invoice_date' || type === 'invoice_type') {
-        selectedEntities.push({
-            type,
-            value: entity.normalizedValue.text
-        });
+        selectedEntities[type] = entity.normalizedValue.text;
       } else if (matchEntityTypes.includes(type)) {
-        selectedEntities.push({
-            type,
-            value: entity.mentionText || entity.normalizedValue.text
-        });
+        selectedEntities[type] = entity.mentionText || entity.normalizedValue.text;
       } else if (lineItemEntityTypes.includes(type)) {
         lineItemEntities.push({
             lineItemString: entity.mentionText || entity.normalizedValue.text,
@@ -76,6 +70,7 @@ function extractEntities(entities) {
         console.log(`Unhandled entity ${entity}.`)
       }
   }
+  selectedEntities['line_items'] = [];
   for (const entity of lineItemEntities) {
       let currentLineItemEntity = getNullLineItemObject();
       const lineItemString = entity.lineItemString;
@@ -102,10 +97,7 @@ function extractEntities(entities) {
                   break;
           }
       }
-      selectedEntities.push({
-          type: 'line_item',
-          value: currentLineItemEntity
-      });
+      selectedEntities['line_items'].push(currentLineItemEntity);
   }
   return selectedEntities;
 }

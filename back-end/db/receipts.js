@@ -45,4 +45,24 @@ async function removeReceiptInDB(receiptID) {
     }
 };
 
-module.exports = {addReceiptInDB, getReceiptInDB, removeReceiptInDB};
+async function getReceiptsInDB(userID) {
+    try {
+        await client.connect();
+        const database = client.db("bookkeeping");
+        const collectionReceipts = database.collection("receipts");
+        const collectionUsers = database.collection("users");
+        const getUserReceiptsQuery = { _id: new ObjectId(userID) };
+        const getUserReceiptsProjection = { projection: { receiptIDs: 1 }};
+        let {receiptIDs} = await collectionUsers.findOne(getUserReceiptsQuery, getUserReceiptsProjection);
+        receiptIDs = receiptIDs.map((receiptID) => {
+            return new ObjectId(receiptID);
+        });
+        const query = { _id : { $in : receiptIDs }, userID: userID };
+        const result = await collectionReceipts.find(query).sort({"analyzedResults.invoice_date": -1, "dateAdded": -1}).toArray();
+        return result;
+    } finally {
+        await client.close();
+    }
+};
+
+module.exports = {addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB};
