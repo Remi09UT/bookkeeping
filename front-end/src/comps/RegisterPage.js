@@ -11,36 +11,30 @@ import {
   MDBInput,
   MDBIcon,
 } from "mdb-react-ui-kit";
+import URL from "../config/URLConfig";
 
 function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   function handleRegister() {
-    const data = {username, password};
+    const data = { username, password };
     axios
-      .put('http://127.0.0.1:3000/users/register', data, {
+      .put(URL + "users/register", data, {
         headers: {
           "Content-Type": "application/json",
-          // Add any additional headers if required
         },
       })
       .then((response) => {
         // Handle the response here
-        if(response.data.status === 201) {
-            alert('Register successful!')
-            window.location.href = 'http://127.0.0.1:3000/users/login';
-        }
-        else if(response.data.status === 422) {
-            alert(`User ${username} already existed! Try a new username`)
-        }
+        alert("Register successful!");
+        window.location.href = "./Login";
       })
       .catch((error) => {
         // Handle any errors that occurred during the request
-        console.error(error);
+        console.log(error.message);
       });
   }
-
 
   return (
     <MDBContainer fluid>

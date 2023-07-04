@@ -1,7 +1,8 @@
 import Box from "@mui/material/Box";
 import LinearProgress from "@mui/material/LinearProgress";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import axios from "axios";
+import URL from "../config/URLConfig";
 
 export default function ProgressBar({
   file,
@@ -12,61 +13,81 @@ export default function ProgressBar({
 }) {
   // TO-DO replace with real post HTTP request
 
-  const [bucketFileName, setBucketFileName] = useState("");
+  const bucketFileName = useRef("");
   useEffect(() => {
     const JWT = sessionStorage.getItem("bookKeepingCredential");
     setStatus("loading picture~");
+    let callback = async function () {
+      let response;
+      try {
+        response = await axios.get(URL + "uploads/static/" + file.name, {
+          headers: {
+            Authorization: `Bearer ${JWT}`,
+          },
+        });
+
+        // upload picture to GCP storage URL
+        // bucketFileName.current = response.data.bucketFileName;
+        //     await axios.put(response.data.url, file, {
+        //       headers: {
+        //         "Content-Type": "application/octet-stream",
+        //       },
+        //     });
+        //     console.log("step2: upload picture to GCP");
+        //     console.log(response);
+      } catch (error) {
+        console.log(error.message);
+      }
+
+      console.log(response);
+    };
+
+    callback();
 
     // axios
-    //   .get("127.0.0.1:3000/uploads/static/:file.name", {
+    //   .get(URL + "uploads/static/" + file.name, {
     //     headers: {
     //       Authorization: `Bearer ${JWT}`,
-    //       // Add any additional headers if required
     //     },
     //   })
-    //   .then((response) => {
+    //   .then(async (response) => {
     //     // upload picture to GCP storage URL
-    //     setBucketFileName(response.bucketFileName);
-    //     axios.put(response.url),
-    //       file,
+    //     bucketFileName.current = response.data.bucketFileName;
+    //     await axios.put(response.data.url, file, {
+    //       headers: {
+    //         "Content-Type": "application/octet-stream",
+    //       },
+    //     });
+    //     console.log("step2: upload picture to GCP");
+    //     console.log(response);
+    //   })
+    //   .then(async (response) => {
+    //     // request document AI analyze receipt
+    //     setStatus("AI analyzing receipt~");
+    //     console.log(bucketFileName.current);
+    //     await axios.post(
+    //       URL + "receipts/",
+    //       { bucketFileName: bucketFileName.current, fileType: "png" },
     //       {
     //         headers: {
-    //           "Content-Type": "multipart/form-data",
-    //           "Authorization": `Bearer ${JWT}`,
+    //           Authorization: `Bearer ${JWT}`,
+    //           ContentType: "application/json",
+    //           // Add any additional headers if required
     //         },
-    //       };
+    //       }
+    //     );
+    //     console.log("step3: request document AI");
+    //     console.log(response);
     //   })
-    //   .then((response) => {
-    //     // request analyze receipt
-    //     setStatus("AI analyzing receipt~");
-    //     axios.post("http://127.0.0.1:3000/receipts/" {
-    //       headers: {
-    //         "Authorization": `Bearer ${JWT}`,
-    //         "fileType": "png",
-    //         "bucketFileName": bucketFileName,
-    //         // Add any additional headers if required
-    //       },
-    //     })
-    //   })
-    //   .then((response) => {
+    //   .then(async (response) => {
     //     //TODO: handle document AI result
+    //     console.log("step4: show AI result");
+    //     console.log(response);
     //   })
     //   .catch((error) => {
     //     // Handle error
     //     alert(error.message);
     //   });
-
-    setTimeout(() => {
-      setFile(null);
-      let trans = [...transactions];
-      let newFakeData = {
-        date: "06/16/2023",
-        description: "fake",
-        amount: -100.5,
-      };
-      trans.push(newFakeData);
-      setTransactions(trans);
-    }, 10000);
   }, []);
 
   return (

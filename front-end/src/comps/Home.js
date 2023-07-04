@@ -5,6 +5,7 @@ import tranGenerator from "../fake_data/tranGenerator";
 import Table from "./Table";
 import Modal from "./Modal";
 import LoginPage from "./LoginPage";
+import URL from "../config/URLConfig";
 
 function Home() {
   const [img, setImg] = useState(null);
@@ -14,14 +15,23 @@ function Home() {
   useEffect(() => {
     let fakeData = tranGenerator();
     setTransactions(fakeData);
+    // axios get all receipts
+    // axios.get(URL + "receipts", {
+    //   headers: {
+    //     Authorization: `Basic ${encodedValue}`,
+    //   },
+    // })
+    // .then(
+    //   setTransactions(fakeData);
+    // )
+    // .catch(error) {
+    //   alert(error.message);
+    // }
   }, []);
 
-  console.log(
-    "home page + credential:" + sessionStorage.getItem("bookKeepingCredential")
-  );
-  // if(!credential) {
-  //   return <LoginPage />
-  // }
+  // console.log(
+  //   "home page + credential:" + sessionStorage.getItem("bookKeepingCredential")
+  // );
   return (
     <div className="App">
       <Title transactions={transactions} />

@@ -11,6 +11,7 @@ import {
   MDBInput,
   MDBIcon,
 } from "mdb-react-ui-kit";
+import URL from "../config/URLConfig";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
@@ -32,32 +33,29 @@ function LoginPage() {
   }, [credential]);
 
   function handleLogin() {
-    let value = username + " " + password;
+    let value = username + ":" + password;
     let encodedValue = btoa(value);
 
-    // axios
-    //   .get("http://127.0.0.1:3000/users/login", {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       Authorization: `Basic ${encodedValue}`,
-    //       // Add any additional headers if required
-    //     },
-    //   })
-    //   .then((response) => {
-    //     // Handle success
-    //     console.log(response.data);
-    //     setCredential("fake JWT");
+    axios
+      .get(URL + "users/login", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${encodedValue}`,
+        },
+      })
+      .then((response) => {
+        console.log(response);
+        setCredential(response.data.token);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
 
-    //   })
-    //   .catch((error) => {
-    //     // Handle error
-    //     console.log(error);
-    //   });
-    if (username === "aaa" && password == "bbb") {
-      setCredential("fake JWT");
-    } else {
-      alert("Wrong account or password");
-    }
+    // if (username === "aaa" && password == "bbb") {
+    //   setCredential("fake JWT");
+    // } else {
+    //   alert("Wrong account or password");
+    // }
   }
 
   return (
