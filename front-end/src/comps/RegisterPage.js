@@ -32,7 +32,7 @@ function RegisterPage() {
       })
       .catch((error) => {
         // Handle any errors that occurred during the request
-        console.log(error.message);
+        console.error(error);
       });
   }
 
