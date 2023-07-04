@@ -33,7 +33,13 @@ let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to 
     // Document AI
     let receiptContent;
     try {
-        receiptContent = await analyzeFileByDocumentAI(userID, bucketFileName, contentType); // Call Document AI!
+        // receiptContent = await analyzeFileByDocumentAI(userID, bucketFileName, contentType); // Call Document AI!
+        await setTimeout(() => {
+            console.log("DocumentAI has been called.");
+            res.status(200).send({message: "DocumentAI has been called."});
+        }, 5000);
+        return;
+
     } catch (error) {
         res.status(error.status || 400).send({...error, message: error.message});
         return;
