@@ -65,4 +65,43 @@ async function getReceiptsInDB(userID) {
     }
 };
 
-module.exports = {addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB};
+async function getReceiptByUserIDAndBucketFileNameInDB(userID, bucketFileName) {
+    try {
+        await client.connect();
+        const database = client.db("bookkeeping");
+        const collection = database.collection("receipts");
+        const query = {userID: userID, bucketFileName: bucketFileName};
+        const result = await collection.findOne(query);
+        if (! result) {
+            throw new ReceiptDoesNotExistError(`No receipt found for userID ${userID} and bucketFileName ${bucketFileName}!`);
+        }
+        return result;
+    } finally {
+        await client.close();
+    }
+};
+
+async function updateReceiptInDB(receiptID, updatedFieldsDoc) {
+    try {
+        await client.connect();
+        const database = client.db("bookkeeping");
+        const collection = database.collection("receipts");
+        const filter = { _id: new ObjectId(receiptID) };
+        const options = { 
+            upsert: false,
+            returnDocument: 'after'
+        };
+        const updateDoc = {
+            $set: updatedFieldsDoc
+        };
+        const result = await collection.findOneAndUpdate(filter, updateDoc, options);
+        if (! result) {
+            throw new ReceiptDoesNotExistError(`No receipt found for receiptID ${receiptID}!`);
+        }
+        return result.value;
+    } finally {
+        await client.close();
+    }
+};
+
+module.exports = {addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB, getReceiptByUserIDAndBucketFileNameInDB, updateReceiptInDB};

@@ -1,9 +1,9 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
 const bodyParser = require('body-parser');
-const { addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB } = require('../db/receipts');
+const { addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB, getReceiptByUserIDAndBucketFileNameInDB, updateReceiptInDB } = require('../db/receipts');
 const getV4ReadSignedUrl = require('../lib/generate-v4-read-signed-url');
-const analyzeFileByDocumentAI = require('../lib/document-ai');
+const {analyzeFileByDocumentAI, matchEntityTypes, lineItemEntityTypes, numberEntityTypes, priceEntityTypes} = require('../lib/document-ai');
 const {fileTypeChecker, getContentType} = require('../lib/support-file-type');
 const { addReceiptToUserInDB, removeReceiptFromUserInDB } = require('../db/users');
 const deleteFile = require('../lib/cloud-storage-file-delete');
@@ -18,6 +18,51 @@ let bucketFileNameChecker = (req, res, next) => {
         res.status(500).send({message: "bucketFileName is not in request body!"});
         return;
     }
+    next();
+};
+
+let modifiedReceiptContentFilter = (req, res, next) => {
+    const requestBody = req.body;
+    const analyzedResults = requestBody.analyzedResults;
+    remove_key = [];
+    for (const key in analyzedResults) {
+        const value = analyzedResults[key];
+        if (! matchEntityTypes.includes(key) && key !== 'line_items') {
+            remove_key.push(key);
+        }
+        if (key === 'line_items') {
+            for (const line_item of value) {
+                line_item_remove_key = [];
+                for (const line_item_key in line_item) {
+                    const line_item_value = line_item[line_item_key];
+                    if (! lineItemEntityTypes.includes(line_item_key) && line_item_key !== 'line_string') {
+                        line_item_remove_key.push(line_item_key);
+                    }
+                    if (numberEntityTypes.includes(line_item_key) && ! isNumericOrNull(line_item_value)) {
+                        res.status(422).send({message: `Entity ${line_item_key} for line_item shoule be either a number or null, but ${line_item_value} is given!`, entity: line_item_key, value: line_item_value});
+                        return;
+                    }
+                    if (priceEntityTypes.includes(line_item_key) && line_item_value) {
+                        line_item[line_item_key] = parseFloat(line_item_value).toFixed(2).toString();
+                    }
+                }
+                line_item_remove_key.forEach((line_item_key) => {
+                    delete line_item[line_item_key];
+                });
+            }
+        }
+        if (numberEntityTypes.includes(key) && ! isNumericOrNull(value)) {
+            res.status(422).send({message: `Entity ${key} shoule be either a number or null, but ${value} is given!`, entity: key, value: value});
+            return;
+        }
+        if (priceEntityTypes.includes(key) && value) {
+            analyzedResults[key] = parseFloat(value).toFixed(2).toString();
+        }
+    }
+    remove_key.forEach((key) => {
+        delete analyzedResults[key];
+    });
+    req.modifiedAnalyzedResults = analyzedResults;
     next();
 };
 
@@ -118,7 +163,25 @@ let userGetAllReceiptsRoute = async (req, res) => {
 };
 
 let userModifyReceiptRoute = async (req, res) => {
-    
+    const userID = req.user.userID;
+    const modifiedAnalyzedResults = req.modifiedAnalyzedResults;
+    let receiptID;
+    try {
+        receiptID = req.params.receipt_id || (((await getReceiptByUserIDAndBucketFileNameInDB(userID, req.body.bucketFileName))?._id || '').toString());
+        if (! receiptID) {
+            res.status(404).send({message: `Cannot find receipt: either receipt_id ${req.params.receipt_id} is missing in URL, or user ${userID} does not have receipt with bucketFileName ${req.body.bucketFileName}. If the receipt has been just added, please wait for a few more seconds and re-try.`});
+            return;
+        }
+    } catch (error) {
+        res.status(error.status || 400).send({...error, message: error.message || `Error in userModifyReceiptRoute() for user ${userID} retrieving record by bucketFileName ${req.body.bucketFileName} in DB!`});
+        return;
+    }
+    try {
+        const updatedReceipt = await updateReceiptInDB(receiptID, {dateLastModified: new Date(), "analyzedResults.selectedEntities": modifiedAnalyzedResults});
+        res.status(200).send({...updatedReceipt, analyzedResults: updatedReceipt.analyzedResults['selectedEntities']});
+    } catch (error) {
+        res.status(error.status || 400).send({...error, message: error.message || `Error in userModifyReceiptRoute() for user ${userID} updating receipt ${receiptID} in DB!`});
+    }
 };
 
 let calculateExpenseSummary = (receiptRecords) => {
@@ -130,7 +193,7 @@ let calculateExpenseSummary = (receiptRecords) => {
         const date = record.analyzedResults.invoice_date || record.dateAdded.toISOString().substring(0, 10);
         const year = parseInt(date.substring(0, 4));
         const month = parseInt(date.substring(5, 7));
-        const expense = parseFloat(record.analyzedResults.total_amount || 0);
+        const expense = parseFloat(record.analyzedResults.total_amount || 0) || 0;
         expenseSummary['expenseSum'] += expense;
         if (! expenseSummary['years'][year]) {
             expenseSummary['years'][year] = {
@@ -149,15 +212,22 @@ let calculateExpenseSummary = (receiptRecords) => {
     return expenseSummary;
 };
 
+function isNumericOrNull(str) {
+    if (str === null) return true;
+    return !isNaN(str) && !isNaN(parseFloat(str));
+};
+
 let receiptsRouter = express.Router();
 
 receiptsRouter.route('/')
     .get(requireAuth, userGetAllReceiptsRoute)
-    .post(requireAuth, jsonBodyParser, bucketFileNameChecker, fileTypeChecker, userAddReceiptRoute);
+    .post(requireAuth, jsonBodyParser, bucketFileNameChecker, fileTypeChecker, userAddReceiptRoute)
+    .patch(requireAuth, jsonBodyParser, bucketFileNameChecker, modifiedReceiptContentFilter, userModifyReceiptRoute);
 
 receiptsRouter.route('/:receipt_id')
     .get(requireAuth, userGetReceiptRoute)
-    .delete(requireAuth, userRemoveReceiptRoute);
+    .delete(requireAuth, userRemoveReceiptRoute)
+    .patch(requireAuth, jsonBodyParser, modifiedReceiptContentFilter, userModifyReceiptRoute);
 
 
 module.exports = receiptsRouter;

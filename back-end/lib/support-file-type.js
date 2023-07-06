@@ -24,6 +24,7 @@ let fileTypeChecker = (req, res, next) => {
         fileType = fileName.substring(fileName.lastIndexOf('.') + 1);
         req.body = {...req.body, fileType};
     }
+    fileType = fileType.toLowerCase();
     if (! fileType in EXTENSION) {
         res.status(422).send({message: `Given fileType ${fileType} is not supported! Please upload one of: ${Object.keys(EXTENSION)}`});
         return;

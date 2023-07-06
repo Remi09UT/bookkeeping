@@ -48,20 +48,22 @@ async function analyzeFileByDocumentAI(userID, fileName, contentType) {
 }
 
 const matchEntityTypes = ['supplier_name', 'supplier_address', 'supplier_phone', 'invoice_date', 'net_amount', 'total_tax_amount', 'total_amount', 'currency', 'invoice_type'];
-const lineItemEntityTypes = ['line_item', 'line_item/description', 'line_item/amount', 'line_item/quantity', 'line_item/unit_price'];
+const lineItemEntityTypes = ['description', 'amount', 'quantity', 'unit_price'];
+const numberEntityTypes = ['net_amount', 'total_tax_amount', 'total_amount', 'amount', 'quantity', 'unit_price'];
+const priceEntityTypes = ['net_amount', 'total_tax_amount', 'total_amount', 'amount', 'unit_price'];
 
 function extractEntities(entities) {
   let selectedEntities = {};
   let lineItemEntities = [];
   for (const entity of entities) {
       const type = entity.type;
-      if (! matchEntityTypes.includes(type) && ! lineItemEntityTypes.includes(type)) {
+      if (! matchEntityTypes.includes(type) && type !== 'line_item') {
         continue;
       } else if (type === 'invoice_date' || type === 'invoice_type') {
         selectedEntities[type] = entity.normalizedValue.text;
       } else if (matchEntityTypes.includes(type)) {
         selectedEntities[type] = entity.mentionText || entity.normalizedValue.text;
-      } else if (lineItemEntityTypes.includes(type)) {
+      } else if (type === 'line_item') {
         lineItemEntities.push({
             lineItemString: entity.mentionText || entity.normalizedValue.text,
             lineItemProperties: entity.properties
@@ -112,4 +114,4 @@ function getNullLineItemObject() {
   };
 }
 
-module.exports = analyzeFileByDocumentAI;
+module.exports = {analyzeFileByDocumentAI, matchEntityTypes, lineItemEntityTypes, numberEntityTypes, priceEntityTypes};
