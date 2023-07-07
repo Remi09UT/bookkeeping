@@ -8,7 +8,8 @@ import axios from "axios";
 
 function Home() {
   const [img, setImg] = useState(null);
-  const [records, setRecords] = new useState(null);
+  const [receipts, setReceipts] = new useState([]);
+  const [amount, setAmount] = new useState(0);
 
   async function fetchRecords() {
     const JWT = sessionStorage.getItem("bookKeepingCredential");
@@ -17,9 +18,16 @@ function Home() {
         Authorization: `Bearer ${JWT}`,
       },
     });
-    console.log(rawRecords);
-    console.log(rawRecords.data.expenseSummary);
-    setRecords(rawRecords);
+    setReceipts(rawRecords.data.receiptRecords);
+    setAmount(rawRecords.data.expenseSummary.expenseSum);
+  }
+
+  function updateRecords(receipt) {
+    const newReceipts = [...receipts, ...receipts];
+    // const newReceipts = [...receipts, receipt];
+    console.log("my updateRecords is called");
+    console.log(newReceipts);
+    setReceipts(newReceipts);
   }
 
   useEffect(() => {
@@ -27,11 +35,11 @@ function Home() {
   }, []);
 
   return (
-    records && (
+    receipts && (
       <div className="App">
-        <Title amount={records.data.expenseSummary.expenseSum} />
-        <UploadForm />
-        <Table setImg={setImg} records={records} />
+        <Title amount={amount} />
+        <UploadForm updateRecords={updateRecords} />
+        <Table setImg={setImg} receipts={receipts} />
         {img && <Modal src={img} setImg={setImg} />}
       </div>
     )

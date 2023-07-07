@@ -1,8 +1,6 @@
 import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SmartTable from "react-next-table";
-import axios from "axios";
-import URL from "../config/URLConfig";
 import { useState, useEffect } from "react";
 //import useFirestore from "../hooks/useFirestore";
 
@@ -105,19 +103,12 @@ const headCells = [
 //   },
 // ];
 
-export default function Table({ setImg, records }) {
+export default function Table({ setImg, receipts }) {
   const [data, setData] = useState(null);
 
   async function getDocs() {
-    // const JWT = sessionStorage.getItem("bookKeepingCredential");
-    // let records = await axios.get(URL + "receipts", {
-    //   headers: {
-    //     Authorization: `Bearer ${JWT}`,
-    //   },
-    // });
-
-    console.log(records);
-    const receipts = records.data.receiptRecords;
+    console.log("below is receipts in table page");
+    console.log(receipts);
 
     const extractedData = receipts.map((receipt) => ({
       amount: receipt.analyzedResults.total_amount,
@@ -155,18 +146,19 @@ export default function Table({ setImg, records }) {
       ),
       delete: <button onClick={() => handleClick(receipt._id)}>Delete</button>,
     }));
+    console.log("below is extractedData in table page");
+    console.log(extractedData);
     //console.log(extractedData);
     setData(extractedData);
   }
 
   //Calls function only once (when it is onMount)
-  useEffect(() => {
-    getDocs();
-  }, []);
-
   function handleClick(id) {}
 
-  //console.log(data);
+  useEffect(() => {
+    getDocs();
+  }, [receipts]);
+
   return (
     data && (
       <div>
