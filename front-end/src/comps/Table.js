@@ -14,9 +14,9 @@ const headCells = [
     width: 200,
   },
   {
-    id: "category",
+    id: "vendor",
     numeric: false,
-    label: "Category",
+    label: "Vendor",
     width: 200,
   },
   {
@@ -105,59 +105,81 @@ const headCells = [
 //   },
 // ];
 
-export default function Table({setImg}) {
-  const[data, setData] = useState(null);
+export default function Table({ setImg }) {
+  const [data, setData] = useState(null);
 
   async function getDocs() {
     const JWT = sessionStorage.getItem("bookKeepingCredential");
-    let records = await axios.get(URL + 'receipts', {
+    let records = await axios.get(URL + "receipts", {
       headers: {
         Authorization: `Bearer ${JWT}`,
-      }
-    })
+      },
+    });
 
     console.log(records);
     const receipts = records.data.receiptRecords;
 
     const extractedData = receipts.map((receipt) => ({
       amount: receipt.analyzedResults.total_amount,
-      description: receipt.analyzedResults.supplier_name,
+      description: (() => {
+        const items = receipt.analyzedResults.line_items;
+        let qxi = items.map((item) => `${item.quantity} x ${item.description}`);
+        return (
+          <ul>
+            {qxi.map((detail) => (
+              <li>{detail}</li>
+            ))}
+          </ul>
+        );
+      })(),
       date: (() => {
         const dateString = receipt.dateAdded;
         const [datePart, timePart] = dateString.split("T");
-    
+
         // Remove the milliseconds from the time part
         const formattedTimePart = timePart.split(".")[0];
-    
+
         // Create the formatted date string by replacing the "T" with a space
         const formattedDate = `${datePart} ${formattedTimePart}`;
         return formattedDate;
       })(),
-      category: receipt.analyzedResults.invoice_type,
-      url: <img src={receipt.imageURL} alt="receipt photo" onClick={() => setImg(receipt.imageURL)} width="200" height="200"/>,
-      delete: <button onClick={() => handleClick(receipt._id)}>Delete</button>
+      vendor: receipt.analyzedResults.supplier_name,
+      url: (
+        <img
+          src={receipt.imageURL}
+          alt="receipt photo"
+          onClick={() => setImg(receipt.imageURL)}
+          width="200"
+          height="200"
+        />
+      ),
+      delete: <button onClick={() => handleClick(receipt._id)}>Delete</button>,
     }));
     //console.log(extractedData);
     setData(extractedData);
   }
-  
-  //Calls function only once (when it is onMount)
-  useEffect(() => {getDocs()}, []);
-  
-  function handleClick(id) {
 
-  }
+  //Calls function only once (when it is onMount)
+  useEffect(() => {
+    getDocs();
+  }, []);
+
+  function handleClick(id) {}
 
   //console.log(data);
-  return data && (
-    <div>
-        {data.length > 0 && <SmartTable
-          data={data}
-          headCells={headCells}
-          // url="/api/admin/emails"
-          searchDebounceTime={800}
-          // noPagination
-        />}
-    </div>
+  return (
+    data && (
+      <div>
+        {data.length > 0 && (
+          <SmartTable
+            data={data}
+            headCells={headCells}
+            // url="/api/admin/emails"
+            searchDebounceTime={800}
+            // noPagination
+          />
+        )}
+      </div>
+    )
   );
 }
