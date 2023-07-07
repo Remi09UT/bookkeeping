@@ -17,7 +17,7 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [credential, setCredential] = useState("");
-
+  
   useEffect(() => {
     if (
       credential &&
@@ -44,11 +44,15 @@ function LoginPage() {
         },
       })
       .then((response) => {
-        console.log(response);
         setCredential(response.data.token);
       })
       .catch((error) => {
-        alert(error.message);
+        if(error.response)
+          alert(error.response.data.message);
+        else 
+          alert(error);
+        setUsername("");
+        setPassword("");
       });
 
     // if (username === "aaa" && password == "bbb") {
@@ -79,6 +83,7 @@ function LoginPage() {
                   id="form1"
                   type="text"
                   className="w-100"
+                  value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
@@ -89,6 +94,7 @@ function LoginPage() {
                   label="Password"
                   id="form3"
                   type="password"
+                  value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
