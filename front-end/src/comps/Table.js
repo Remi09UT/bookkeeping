@@ -17,13 +17,13 @@ const headCells = [
     id: "category",
     numeric: false,
     label: "Category",
-    width: 100,
+    width: 200,
   },
   {
     id: "description",
     numeric: false,
     label: "Description",
-    width: 300,
+    width: 200,
   },
   {
     id: "amount",
@@ -115,17 +115,29 @@ export default function Table({setImg}) {
         Authorization: `Bearer ${JWT}`,
       }
     })
+
     console.log(records);
     const receipts = records.data.receiptRecords;
+
     const extractedData = receipts.map((receipt) => ({
       amount: receipt.analyzedResults.total_amount,
-      description: "blabla",
-      date: receipt.dateAdded,
-      category: 'Grocery',
+      description: receipt.analyzedResults.supplier_name,
+      date: (() => {
+        const dateString = receipt.dateAdded;
+        const [datePart, timePart] = dateString.split("T");
+    
+        // Remove the milliseconds from the time part
+        const formattedTimePart = timePart.split(".")[0];
+    
+        // Create the formatted date string by replacing the "T" with a space
+        const formattedDate = `${datePart} ${formattedTimePart}`;
+        return formattedDate;
+      })(),
+      category: receipt.analyzedResults.invoice_type,
       url: <img src={receipt.imageURL} alt="receipt photo" onClick={() => setImg(receipt.imageURL)} width="200" height="200"/>,
       delete: <button onClick={() => handleClick(receipt._id)}>Delete</button>
     }));
-    console.log(extractedData);
+    //console.log(extractedData);
     setData(extractedData);
   }
   
@@ -143,7 +155,7 @@ export default function Table({setImg}) {
           data={data}
           headCells={headCells}
           // url="/api/admin/emails"
-          // searchDebounceTime={800}
+          searchDebounceTime={800}
           // noPagination
         />}
     </div>
