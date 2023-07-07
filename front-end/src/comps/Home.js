@@ -15,23 +15,8 @@ function Home() {
   useEffect(() => {
     let fakeData = tranGenerator();
     setTransactions(fakeData);
-    // axios get all receipts
-    // axios.get(URL + "receipts", {
-    //   headers: {
-    //     Authorization: `Basic ${encodedValue}`,
-    //   },
-    // })
-    // .then(
-    //   setTransactions(fakeData);
-    // )
-    // .catch(error) {
-    //   alert(error.message);
-    // }
   }, []);
 
-  // console.log(
-  //   "home page + credential:" + sessionStorage.getItem("bookKeepingCredential")
-  // );
   return (
     <div className="App">
       <Title transactions={transactions} />

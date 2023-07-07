@@ -47,7 +47,7 @@ export default function ProgressBar({
       console.log(analyzeRes);
       setFile(null);
       setStatus("Upload a picture!");
-      setTimeout(() => window.location.reload(), 500);
+      // setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       console.log(error);
     }
@@ -56,60 +56,6 @@ export default function ProgressBar({
   useEffect(() => {
     uploadReceipt(file);
   }, []);
-  // let bucketFileName;
-  // useEffect(() => {
-  //   const JWT = sessionStorage.getItem("bookKeepingCredential");
-  //   setStatus("loading picture~");
-
-  //   axios
-  //     .get(URL + "uploads/static/" + file.name, {
-  //       headers: {
-  //         Authorization: `Bearer ${JWT}`,
-  //       },
-  //     })
-  //     .then(async (response) => {
-  //       // upload picture to GCP storage URL
-  //       bucketFileName = response.data.bucketFileName;
-  //       const curResponse = await axios.put(response.data.url, file, {
-  //         headers: {
-  //           "Content-Type": "application/octet-stream",
-  //         },
-  //       });
-  //       console.log("step2: upload picture to GCP");
-  //       console.log(response);
-  //       return curResponse;
-  //     })
-  //     .then(async (response) => {
-  //       // request document AI analyze receipt
-  //       setStatus("AI analyzing receipt~");
-  //       console.log(bucketFileName);
-  //       const curResponse = await axios.post(
-  //         URL + "receipts/",
-  //         { bucketFileName, fileType: "png" },
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${JWT}`,
-  //             ContentType: "application/json",
-  //             // Add any additional headers if required
-  //           },
-  //         }
-  //       );
-  //       console.log("step3: request document AI");
-  //       console.log(response);
-  //       return curResponse;
-  //     })
-  //     .then((response) => {
-  //       //TODO: handle document AI result
-  //       console.log("step4: show AI result");
-  //       console.log(response);
-  //       setFile(null);
-  //       setStatus("Upload a picture!");
-  //     })
-  //     .catch((error) => {
-  //       // Handle error
-  //       alert(error.message);
-  //     });
-  // }, []);
 
   return (
     <Box sx={{ width: "100%" }}>
