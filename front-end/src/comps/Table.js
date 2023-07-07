@@ -105,16 +105,16 @@ const headCells = [
 //   },
 // ];
 
-export default function Table({ setImg }) {
+export default function Table({ setImg, records }) {
   const [data, setData] = useState(null);
 
   async function getDocs() {
-    const JWT = sessionStorage.getItem("bookKeepingCredential");
-    let records = await axios.get(URL + "receipts", {
-      headers: {
-        Authorization: `Bearer ${JWT}`,
-      },
-    });
+    // const JWT = sessionStorage.getItem("bookKeepingCredential");
+    // let records = await axios.get(URL + "receipts", {
+    //   headers: {
+    //     Authorization: `Bearer ${JWT}`,
+    //   },
+    // });
 
     console.log(records);
     const receipts = records.data.receiptRecords;

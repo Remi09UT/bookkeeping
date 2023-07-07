@@ -4,13 +4,7 @@ import { useEffect, useRef } from "react";
 import axios from "axios";
 import URL from "../config/URLConfig";
 
-export default function ProgressBar({
-  file,
-  setFile,
-  transactions,
-  setTransactions,
-  setStatus,
-}) {
+export default function ProgressBar({ file, setFile, setStatus }) {
   // TO-DO replace with real post HTTP request
   async function uploadReceipt(receipt) {
     try {
