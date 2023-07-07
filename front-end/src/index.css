@@ -20,6 +20,13 @@ body{
   margin: 0 auto;
 }
 
+.Log-off {
+  position: absolute;
+  top: 40px;
+  right: 100px;
+  padding: 10px;
+}
+
 .title {
   padding: 5px;
   background-color: var(--background);

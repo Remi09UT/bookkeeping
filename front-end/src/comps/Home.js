@@ -5,6 +5,7 @@ import Table from "./Table";
 import Modal from "./Modal";
 import URL from "../config/URLConfig";
 import axios from "axios";
+import { Button } from "@mui/material";
 
 function Home() {
   const [img, setImg] = useState(null);
@@ -24,6 +25,12 @@ function Home() {
     setAmount(rawRecords.data.expenseSummary.expenseSum);
   }
 
+  const handleLogout = () => {
+    // Clear the localStorage
+    sessionStorage.removeItem("bookKeepingCredential");
+    window.location.href = "/Login";
+  };
+
   useEffect(() => {
     fetchRecords();
   }, []);
@@ -31,6 +38,11 @@ function Home() {
   return (
     receipts && (
       <div className="App">
+        <div className="Log-off">
+          <Button variant="contained" onClick={handleLogout}>
+            Sign Out
+          </Button>
+        </div>
         <Title amount={amount} />
         <UploadForm />
         <Table setImg={setImg} receipts={receipts} />

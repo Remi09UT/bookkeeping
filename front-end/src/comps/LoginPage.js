@@ -17,13 +17,14 @@ function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [credential, setCredential] = useState("");
-  
+
   useEffect(() => {
     if (
       credential &&
       credential != sessionStorage.getItem("bookKeepingCredential")
     ) {
       sessionStorage.setItem("bookKeepingCredential", credential);
+      setCredential("");
     }
 
     if (credential || sessionStorage.getItem("bookKeepingCredential")) {
@@ -47,10 +48,8 @@ function LoginPage() {
         setCredential(response.data.token);
       })
       .catch((error) => {
-        if(error.response)
-          alert(error.response.data.message);
-        else 
-          alert(error);
+        if (error.response) alert(error.response.data.message);
+        else alert(error);
         setUsername("");
         setPassword("");
       });
