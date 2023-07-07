@@ -18,16 +18,10 @@ function Home() {
         Authorization: `Bearer ${JWT}`,
       },
     });
+    console.log("records");
+    console.log(rawRecords);
     setReceipts(rawRecords.data.receiptRecords);
     setAmount(rawRecords.data.expenseSummary.expenseSum);
-  }
-
-  function updateRecords(receipt) {
-    const newReceipts = [...receipts, ...receipts];
-    // const newReceipts = [...receipts, receipt];
-    console.log("my updateRecords is called");
-    console.log(newReceipts);
-    setReceipts(newReceipts);
   }
 
   useEffect(() => {
@@ -38,7 +32,7 @@ function Home() {
     receipts && (
       <div className="App">
         <Title amount={amount} />
-        <UploadForm updateRecords={updateRecords} />
+        <UploadForm />
         <Table setImg={setImg} receipts={receipts} />
         {img && <Modal src={img} setImg={setImg} />}
       </div>

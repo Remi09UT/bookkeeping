@@ -2,7 +2,9 @@ import React from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SmartTable from "react-next-table";
 import { useState, useEffect } from "react";
-//import useFirestore from "../hooks/useFirestore";
+import axios from "axios";
+import URL from "../config/URLConfig";
+import Button from "@mui/material/Button";
 
 const headCells = [
   {
@@ -44,65 +46,6 @@ const headCells = [
   },
 ];
 
-// const dummy = [
-//   {
-//     _id: "6144e83a966145976c75cdfe",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2021-09-15",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-//   {
-//     _id: "61439914086a4f4e9f9d87cd",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2021-09-17",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-//   {
-//     _id: "61439887086a4f4e9f9d87cc",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2021-09-19",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-//   {
-//     _id: "6143985d086a4f4e9f9d87cb",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2021-09-13",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-//   {
-//     _id: "614397edcbfc69177da008c8",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2021-03-17",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-//   {
-//     _id: "6143b810d713e67dfca4985c",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2020-09-17",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-//   {
-//     _id: "61439b2f0b93c171aa1cf475",
-//     category: "Clothing",
-//     amount: "55",
-//     description: "ahlannn",
-//     date: "2023-06-14",
-//     url: <img src="https://picsum.photos/100/100" />,
-//   },
-// ];
-
 export default function Table({ setImg, receipts }) {
   const [data, setData] = useState(null);
 
@@ -114,6 +57,8 @@ export default function Table({ setImg, receipts }) {
       amount: receipt.analyzedResults.total_amount,
       description: (() => {
         const items = receipt.analyzedResults.line_items;
+        console.log("my analyzedResults in table page");
+        console.log(receipt.analyzedResults);
         let qxi = items.map((item) => `${item.quantity} x ${item.description}`);
         return (
           <ul>
@@ -144,16 +89,37 @@ export default function Table({ setImg, receipts }) {
           height="200"
         />
       ),
-      delete: <button onClick={() => handleClick(receipt._id)}>Delete</button>,
+      delete: (
+        <Button variant="contained" onClick={() => handleClick(receipt._id)}>
+          Delete
+        </Button>
+      ),
     }));
     console.log("below is extractedData in table page");
     console.log(extractedData);
-    //console.log(extractedData);
     setData(extractedData);
+    // window.location.reload();
+  }
+
+  async function deletRequest(id) {
+    try {
+      const JWT = sessionStorage.getItem("bookKeepingCredential");
+      await axios.delete(URL + "receipts/" + id, {
+        headers: {
+          Authorization: `Bearer ${JWT}`,
+        },
+      });
+      alert("Receipt removed successfully!");
+      setTimeout(() => window.location.reload(), 500);
+    } catch (error) {
+      alert(error.message);
+    }
   }
 
   //Calls function only once (when it is onMount)
-  function handleClick(id) {}
+  function handleClick(id) {
+    deletRequest(id);
+  }
 
   useEffect(() => {
     getDocs();

@@ -4,12 +4,7 @@ import { useEffect, useRef } from "react";
 import axios from "axios";
 import URL from "../config/URLConfig";
 
-export default function ProgressBar({
-  file,
-  setFile,
-  setStatus,
-  updateRecords,
-}) {
+export default function ProgressBar({ file, setFile, setStatus }) {
   // TO-DO replace with real post HTTP request
   async function uploadReceipt(receipt) {
     try {
@@ -30,8 +25,6 @@ export default function ProgressBar({
           "Content-Type": "application/octet-stream",
         },
       });
-      console.log("below is analyzed result");
-      console.log(uploadRes);
       setStatus("AI analyzing receipt~");
       let analyzeRes = await axios.post(
         URL + "receipts",
@@ -44,10 +37,12 @@ export default function ProgressBar({
           },
         }
       );
-      updateRecords(analyzeRes);
+      console.log("below is analyzed result");
+      console.log(analyzeRes);
       setFile(null);
       setStatus("Upload a picture!");
-      // setTimeout(() => window.location.reload(), 500);
+      alert("New receipt added successfully!");
+      setTimeout(() => window.location.reload(), 500);
     } catch (error) {
       alert(error.message);
     }
