@@ -6,6 +6,7 @@ import URL from "../config/URLConfig";
 
 export default function ProgressBar({ file, setFile, setStatus }) {
   // TO-DO replace with real post HTTP request
+  const bucketFileName = useRef("");
   async function uploadReceipt(receipt) {
     try {
       setStatus("Uploading receipt~");
@@ -18,7 +19,7 @@ export default function ProgressBar({ file, setFile, setStatus }) {
           },
         }
       );
-      const bucketFileName = storageInfo.data.bucketFileName;
+      bucketFileName.current = storageInfo.data.bucketFileName;
       const url = storageInfo.data.url;
       let uploadRes = await axios.put(url, receipt, {
         headers: {
@@ -27,13 +28,12 @@ export default function ProgressBar({ file, setFile, setStatus }) {
       });
       setStatus("AI analyzing receipt~");
       let analyzeRes = await axios.post(
-        URL + "receipts",
-        {
-          bucketFileName,
-        },
+        URL + "receipts/",
+        { bucketFileName: bucketFileName.current, fileType: "png" },
         {
           headers: {
             Authorization: `Bearer ${JWT}`,
+            ContentType: "application/json",
           },
         }
       );
