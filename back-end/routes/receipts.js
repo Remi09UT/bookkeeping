@@ -184,6 +184,18 @@ let userModifyReceiptRoute = async (req, res) => {
     }
 };
 
+let getCloudStorageReadURLRoute = async (req, res) => {
+    const userID = req.user.userID;
+    const bucketFileName = req.params.bucketfilename;
+    let url;
+    try {
+        url = await getV4ReadSignedUrl(userID, bucketFileName);
+    } catch (error) {
+        res.status(error.status || 400).send({...error, message: error.message});
+    }
+    res.status(201).send({url});
+};
+
 let calculateExpenseSummary = (receiptRecords) => {
     let expenseSummary = {
         expenseSum: 0,
@@ -228,6 +240,9 @@ receiptsRouter.route('/:receipt_id')
     .get(requireAuth, userGetReceiptRoute)
     .delete(requireAuth, userRemoveReceiptRoute)
     .patch(requireAuth, jsonBodyParser, modifiedReceiptContentFilter, userModifyReceiptRoute);
+
+receiptsRouter.route('/static/:bucketfilename')
+    .get(requireAuth, getCloudStorageReadURLRoute);
 
 
 module.exports = receiptsRouter;
