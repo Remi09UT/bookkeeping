@@ -28,11 +28,16 @@ function RegisterPage() {
       .then((response) => {
         // Handle the response here
         alert("Register successful!");
-        window.location.href = "./Login";
+        window.location.href = "/Login";
       })
       .catch((error) => {
         // Handle any errors that occurred during the request
-        console.error(error);
+        if(error.response)
+          alert(error.response.data.message);
+        else 
+          alert(error);
+        setUsername("")
+        setPassword("")
       });
   }
 
@@ -57,6 +62,7 @@ function RegisterPage() {
                   id="form1"
                   type="text"
                   className="w-100"
+                  value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
               </div>
@@ -67,6 +73,7 @@ function RegisterPage() {
                   label="Password"
                   id="form3"
                   type="password"
+                  value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>

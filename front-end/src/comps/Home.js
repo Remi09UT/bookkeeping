@@ -1,47 +1,54 @@
 import { useEffect, useState } from "react";
 import Title from "./Title";
 import UploadForm from "./UploadForm";
-import tranGenerator from "../fake_data/tranGenerator";
 import Table from "./Table";
 import Modal from "./Modal";
-import LoginPage from "./LoginPage";
 import URL from "../config/URLConfig";
+import axios from "axios";
+import { Button } from "@mui/material";
 
 function Home() {
   const [img, setImg] = useState(null);
+  const [receipts, setReceipts] = new useState([]);
+  const [amount, setAmount] = new useState(0);
 
-  // fake transactions for testing only
-  const [transactions, setTransactions] = useState([]);
+  async function fetchRecords() {
+    const JWT = sessionStorage.getItem("bookKeepingCredential");
+    const rawRecords = await axios.get(URL + "receipts", {
+      headers: {
+        Authorization: `Bearer ${JWT}`,
+      },
+    });
+    console.log("records");
+    console.log(rawRecords);
+    setReceipts(rawRecords.data.receiptRecords);
+    setAmount(rawRecords.data.expenseSummary.expenseSum);
+  }
+
+  const handleLogout = () => {
+    // Clear the localStorage
+    sessionStorage.removeItem("bookKeepingCredential");
+    window.location.href = "/Login";
+  };
+
   useEffect(() => {
-    let fakeData = tranGenerator();
-    setTransactions(fakeData);
-    // axios get all receipts
-    // axios.get(URL + "receipts", {
-    //   headers: {
-    //     Authorization: `Basic ${encodedValue}`,
-    //   },
-    // })
-    // .then(
-    //   setTransactions(fakeData);
-    // )
-    // .catch(error) {
-    //   alert(error.message);
-    // }
+    fetchRecords();
   }, []);
 
-  // console.log(
-  //   "home page + credential:" + sessionStorage.getItem("bookKeepingCredential")
-  // );
   return (
-    <div className="App">
-      <Title transactions={transactions} />
-      <UploadForm
-        transactions={transactions}
-        setTransactions={setTransactions}
-      />
-      <Table setImg={setImg} />
-      {img && <Modal src={img} setImg={setImg} />}
-    </div>
+    receipts && (
+      <div className="App">
+        <div className="Log-off">
+          <Button variant="contained" onClick={handleLogout}>
+            Sign Out
+          </Button>
+        </div>
+        <Title amount={amount} />
+        <UploadForm />
+        <Table setImg={setImg} receipts={receipts} />
+        {img && <Modal src={img} setImg={setImg} />}
+      </div>
+    )
   );
 }
 

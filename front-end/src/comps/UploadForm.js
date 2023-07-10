@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import ProgressBar from "./ProgressBar";
 
-export default function UploadForm({ transactions, setTransactions }) {
+export default function UploadForm() {
   const [file, setFile] = useState(null);
   const [error, setError] = useState(null);
   const [status, setStatus] = useState("Upload a picture!");
@@ -32,13 +32,7 @@ export default function UploadForm({ transactions, setTransactions }) {
         {error && <Alert severity="warning">{error}</Alert>}
         {file && <div className="file">{file.name}</div>}
         {file && (
-          <ProgressBar
-            file={file}
-            setFile={setFile}
-            transactions={transactions}
-            setTransactions={setTransactions}
-            setStatus={setStatus}
-          />
+          <ProgressBar file={file} setFile={setFile} setStatus={setStatus} />
         )}
       </div>
     </form>
