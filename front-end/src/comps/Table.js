@@ -59,7 +59,9 @@ export default function Table({ setImg, receipts }) {
         const items = receipt.analyzedResults.line_items;
         console.log("my analyzedResults in table page");
         console.log(receipt.analyzedResults);
-        let qxi = items.map((item) => `${item.quantity} x ${item.description}`);
+        let qxi = items.map(
+          (item) => `${item.quantity || 1} x ${item.description}`
+        );
         return (
           <ul>
             {qxi.map((detail) => (
@@ -69,15 +71,8 @@ export default function Table({ setImg, receipts }) {
         );
       })(),
       date: (() => {
-        const dateString = receipt.dateAdded;
-        const [datePart, timePart] = dateString.split("T");
-
-        // Remove the milliseconds from the time part
-        const formattedTimePart = timePart.split(".")[0];
-
-        // Create the formatted date string by replacing the "T" with a space
-        const formattedDate = `${datePart} ${formattedTimePart}`;
-        return formattedDate;
+        const dateString = receipt.analyzedResults.invoice_date;
+        return dateString;
       })(),
       vendor: receipt.analyzedResults.supplier_name,
       url: (
