@@ -1,0 +1,28 @@
+// back-end install
+npm install express
+npm install morgan
+npm install @google-cloud/storage
+npm install dotenv
+npm install uuid
+npm install body-parser
+npm install mongodb
+npm install jsonwebtoken
+npm install @google-cloud/documentai
+
+// back-end run
+npx nodemon index.js
+
+// docker
+gcloud cli
+
+// gcp project service account
+service@bookkeeping-390004.iam.gserviceaccount.com
+refer to: https://cloud.google.com/sdk/docs/install?hl=zh-cn#deb
+
+// service account commands
+./google-cloud-sdk/bin/gcloud auth activate-service-account service@bookkeeping-390004.iam.gserviceaccount.com --key-file=./atlas_hack/bookkeeping/back-end/bookkeeping-390004-fe4d65698165.json
+./google-cloud-sdk/bin/gcloud config set project bookkeeping-390004
+
+
+// js
+filename.substring(37)
