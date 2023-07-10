@@ -37,8 +37,6 @@ export default function ProgressBar({ file, setFile, setStatus }) {
           },
         }
       );
-      console.log("below is analyzed result");
-      console.log(analyzeRes);
       setFile(null);
       setStatus("Upload a picture!");
       alert("New receipt added successfully!");

@@ -50,15 +50,10 @@ export default function Table({ setImg, receipts }) {
   const [data, setData] = useState(null);
 
   async function getDocs() {
-    console.log("below is receipts in table page");
-    console.log(receipts);
-
     const extractedData = receipts.map((receipt) => ({
       amount: receipt.analyzedResults.total_amount,
       description: (() => {
         const items = receipt.analyzedResults.line_items;
-        console.log("my analyzedResults in table page");
-        console.log(receipt.analyzedResults);
         let qxi = items.map(
           (item) => `${item.quantity || 1} x ${item.description}`
         );
@@ -90,8 +85,6 @@ export default function Table({ setImg, receipts }) {
         </Button>
       ),
     }));
-    console.log("below is extractedData in table page");
-    console.log(extractedData);
     setData(extractedData);
     // window.location.reload();
   }

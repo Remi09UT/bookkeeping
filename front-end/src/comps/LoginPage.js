@@ -28,7 +28,6 @@ function LoginPage() {
     }
 
     if (credential || sessionStorage.getItem("bookKeepingCredential")) {
-      console.log(sessionStorage.getItem("bookKeepingCredential"));
       window.location.href = "./Home";
     }
   }, [credential]);
@@ -53,12 +52,6 @@ function LoginPage() {
         setUsername("");
         setPassword("");
       });
-
-    // if (username === "aaa" && password == "bbb") {
-    //   setCredential("fake JWT");
-    // } else {
-    //   alert("Wrong account or password");
-    // }
   }
 
   return (

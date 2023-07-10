@@ -19,14 +19,11 @@ function Home() {
         Authorization: `Bearer ${JWT}`,
       },
     });
-    console.log("records");
-    console.log(rawRecords);
     setReceipts(rawRecords.data.receiptRecords);
     setAmount(rawRecords.data.expenseSummary.expenseSum);
   }
 
   const handleLogout = () => {
-    // Clear the localStorage
     sessionStorage.removeItem("bookKeepingCredential");
     window.location.href = "/Login";
   };
