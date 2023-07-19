@@ -1,135 +1,187 @@
-const client = require('../lib/mongodb-atlas-client.js');
-const {DuplicateUsernameError, UserDoesNotExistError, UserReceiptArrayUpdateFailureError} = require('../lib/errors');
-const { ObjectId } = require('mongodb');
+const { DuplicateUsernameError, UserDoesNotExistError, UserReceiptArrayUpdateFailureError } = require('../lib/errors');
+const {createConnection} = require('../tidb/config.js'); 
+const { v4: uuidv4 } = require('uuid');
+const mysql = require('mysql2/promise');
 
 async function registerUserInDB(username, password) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("users");
-        const receiptIDs = [];
-        const doc = { username, password, receiptIDs };
-        const result = await collection.insertOne(doc);
-        return result.insertedId.toString();
+      const connection = await createConnection();
+      const sql = 'INSERT INTO user (_id, username, password) VALUES (?, ?, ?)';
+      const result = await new Promise((resolve, reject) => {
+        connection.query(sql, [uuidv4(), username, password], function (err, result) {
+          if (err) reject(err);
+          resolve(result);
+        });
+      });
+      await connection.end();
+      return result.insertId.toString();
     } catch (error) {
-        console.log(error);
-        if (error.name === 'MongoServerError' && error.code === 11000 && error.keyValue.username === username) {
-            throw new DuplicateUsernameError(`Username already exist: ${username}`);
-        } else {
-            throw new Error("Unexpected error in registerUserInDB()!");
-        }
-    } finally {
-        await client.close();
+      console.log(error);
+      if (error.code === 'ER_DUP_ENTRY') {
+        throw new DuplicateUsernameError(`Username already exists: ${username}`);
+      } else {
+        throw new Error('Unexpected error in registerUserInDB()!');
+      }
     }
-}
+  }
+  
+  
 
-async function checkUsernameExistenceInDB(username) { // result format unchecked
+  async function checkUsernameExistenceInDB(username) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("users");
-        const doc = { username: {$eq: username} };
-        const result = await collection.countDocuments(doc);
-        return result > 0;
+      const connection = await createConnection();
+      const sql = 'SELECT COUNT(*) AS count FROM user WHERE username = ?';
+      const result = await new Promise((resolve, reject) => {
+        connection.query(sql, [username], function (err, result) {
+          if (err) reject(err);
+          resolve(result);
+        });
+      });
+      await connection.end();
+      return result[0].count > 0;
     } catch (error) {
-        console.log(error);
-        throw new Error("Unexpected error in checkUsernameExistenceInDB()!");
-    } finally {
-        await client.close();
+      console.log(error);
+      throw new Error("Unexpected error in checkUsernameExistenceInDB()!");
     }
-}
+  }
+  
 
-async function getUserByUsernameInDB(username) {
+  async function getUserByUsernameInDB(un) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("users");
-        const doc = { username };
-        const result = await collection.findOne(doc);
-        if (! result) {
-            throw new UserDoesNotExistError(`Username does not exist: ${username}`);
-        }
-        return {userID: result._id.toString(), username: result.username, password: result.password };
+      const connection = await createConnection();
+      const sql = 'SELECT * FROM user WHERE username = ?';
+      const result = await new Promise((resolve, reject) => {
+        connection.query(sql, [un], function (err, result) {
+          if (err) reject(err);
+          resolve(result);
+        });
+      });
+      await connection.end();
+      if (result.length === 0) {
+        throw new UserDoesNotExistError(`Username does not exist: ${un}`);
+      }
+      const { _id, userName, password } = result[0];
+      return { userID: _id, username: userName, password };
     } catch (error) {
-        console.log(error);
-        if (error.name === 'UserDoesNotExistError') {
-            throw error;
-        } else {
-            throw new Error("Unexpected error in getUserByUsernameInDB()!");
-        }
-    } finally {
-        await client.close();
+      console.log(error);
+      if (error instanceof UserDoesNotExistError) {
+        throw error;
+      } else {
+        throw new Error("Unexpected error in getUserByUsernameInDB()!");
+      }
     }
-}
+  }
+  
+// todo: add receipt to user  
 
-async function addReceiptToUserInDB(userID, receiptID) { // How to ensure receiptID uniqueness in receiptIDs array?
-    try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("users");
-        const filter = { _id: new ObjectId(userID) };
-        const options = { 
-            upsert: false,
-            returnDocument: 'after',
-            projection: {receiptIDs: 1}
-        };
-        const updateDoc = {
-            $addToSet: { receiptIDs: receiptID } 
-        };
-        const result = await collection.findOneAndUpdate(filter, updateDoc, options);
-        if (! result) {
-            throw new UserDoesNotExistError(`userID does not exist: ${userID}.`);
-        } else if (! result.value.receiptIDs.includes(receiptID)) {
-            throw new UserReceiptArrayUpdateFailureError(`Failed to add receipt ID ${receiptID} to ${userID}.`);
-        }
-        return result.value.receiptIDs;
-    } catch (error) {
-        console.log(error);
-        if (error.name === 'UserDoesNotExistError') {
-            throw error;
-        } else if (error.name === 'UserReceiptArrayUpdateFailureError') {
-            throw error;
-        } else {
-            throw new Error("Unexpected error in addUserReceiptInDB()!");
-        }
-    } finally {
-        await client.close();
-    }
-}
+//   async function addReceiptToUserInDB(userID, receiptID) {
+//     try {
+//       const connection = await createConnection();
+      
+//       // Insert the mapping of userID and receiptID into the receipt table
+//       const insertQuery = 'UPDATE receipt SET userID = ? WHERE _id = ?';
+//       const insertResult = await new Promise((resolve, reject) => {
+//         connection.query(insertQuery, [userID, receiptID], function (err, result) {
+//           if (err) reject(err);
+//           resolve(result);
+//         });
+//       });
+      
+//       if (insertResult.affectedRows !== 1) {
+//         throw new UserReceiptArrayUpdateFailureError(`Failed to add receipt ID ${receiptID} to user ${userID}.`);
+//       }
+      
+//       // Retrieve the updated user information along with the associated receipt
+//       const selectQuery = `
+//         SELECT u.*, r.*
+//         FROM user u
+//         JOIN receipt r ON u._id = r.userID
+//         WHERE u._id = ? AND r._id = ?
+//       `;
+//       const selectResult = await new Promise((resolve, reject) => {
+//         connection.query(selectQuery, [userID, receiptID], function (err, result) {
+//           if (err) reject(err);
+//           resolve(result);
+//         });
+//       });
+      
+//       await connection.end();
+      
+//       if (selectResult.length === 0) {
+//         throw new UserReceiptArrayUpdateFailureError(`Failed to retrieve user and receipt information after adding receipt ID ${receiptID} to user ${userID}.`);
+//       }
+      
+//       // Extract the relevant data from the result
+//       const user = {
+//         userID: selectResult[0]._id,
+//         username: selectResult[0].userName,
+//         password: selectResult[0].password
+//         // Include other user fields as needed
+//       };
+//       const receipt = {
+//         receiptID: selectResult[0]._id,
+//         // Include other receipt fields as needed
+//       };
+      
+//       return { user, receipt };
+//     } catch (error) {
+//       console.log(error);
+//       if (error instanceof UserReceiptArrayUpdateFailureError) {
+//         throw error;
+//       } else {
+//         throw new Error("Unexpected error in addReceiptToUserInDB()!");
+//       }
+//     }
+//   }
+  
+  
+  
 
-async function removeReceiptFromUserInDB(userID, receiptID) {
-    try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("users");
-        const filter = { _id: new ObjectId(userID) };
-        const options = { 
-            upsert: false,
-            returnDocument: 'after',
-            projection: {receiptIDs: 1}
-        };
-        const updateDoc = {
-            $pull: { receiptIDs: receiptID } 
-        };
-        const result = await collection.findOneAndUpdate(filter, updateDoc, options);
-        if (! result) {
-            throw new UserDoesNotExistError(`userID does not exist: ${userID}.`);
-        } else if (result.value.receiptIDs.includes(receiptID)) {
-            throw new UserReceiptArrayUpdateFailureError(`Failed to remove receipt ID ${receiptID} from ${userID}.`);
-        }
-        return result.value.receiptIDs;
-    } catch (error) {
-        console.log(error);
-        if (error.name === 'UserDoesNotExistError') {
-            throw error;
-        } else if (error.name === 'UserReceiptArrayUpdateFailureError') {
-            throw error;
-        } else {
-            throw new Error("Unexpected error in removeReceiptFromUserInDB()!");
-        }
-    } finally {
-        await client.close();
-    }
-}
+// async function removeReceiptFromUserInDB(userID, receiptID) {
+//   try {
+//     const connection = await client.createConnection();
+//     const result = await connection.execute(
+//       `UPDATE user SET receiptIDs = JSON_REMOVE(receiptIDs, JSON_UNQUOTE(JSON_SEARCH(receiptIDs, 'one', ?))) WHERE _id = ?`,
+//       [receiptID, userID]
+//     );
+//     await connection.end();
+//     if (result.affectedRows !== 1) {
+//       throw new UserReceiptArrayUpdateFailureError(`Failed to remove receipt ID ${receiptID} from user ${userID}.`);
+//     }
+//     return result.insertId.toString();
+//   } catch (error) {
+//     console.log(error);
+//     if (error instanceof UserReceiptArrayUpdateFailureError) {
+//       throw error;
+//     } else {
+//       throw new Error("Unexpected error in removeReceiptFromUserInDB()!");
+//     }
+//   }
+// }
 
-module.exports = {registerUserInDB, checkUsernameExistenceInDB, getUserByUsernameInDB, addReceiptToUserInDB, removeReceiptFromUserInDB};
+module.exports = {
+  registerUserInDB,
+  checkUsernameExistenceInDB,
+  getUserByUsernameInDB,
+//   addReceiptToUserInDB,
+//   removeReceiptFromUserInDB
+};
+
+
+// async function checkUsernameExistence() {
+//     const userID = 'aaa';
+//     const receiptID = 'receipt456';
+    
+//     try {
+//       const { user, receipt } = await addReceiptToUserInDB(userID, receiptID);
+//       console.log('Receipt added to user successfully:');
+//       console.log('User:', user);
+//       console.log('Receipt:', receipt);
+//     } catch (error) {
+//       console.error('Failed to add receipt to user:', error);
+//     }
+    
+//   }
+  
+//   // Call the async function
+//   checkUsernameExistence();

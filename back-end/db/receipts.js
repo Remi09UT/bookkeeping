@@ -1,107 +1,177 @@
 const { ReceiptDoesNotExistError } = require('../lib/errors.js');
-const client = require('../lib/mongodb-atlas-client.js');
-const { ObjectId } = require('mongodb');
+const client = require('../tidb/config.js'); // Replace with your TiDB client module
+const { v4: uuidv4 } = require('uuid');
 
 async function addReceiptInDB(doc) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("receipts");
-        const result = await collection.insertOne(doc);
-        return result.insertedId.toString();
-    } finally {
-        await client.close();
+        const connection = await client.createConnection();
+        const result = await connection.execute(`
+      INSERT INTO receipt (
+        _id, userID, contentType, fileName, bucketFileName, imageURL, dateAdded, dateLastModified, analyzedResults
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?
+      )`,
+            [
+                uuidv4(), doc.userID, doc.contentType, doc.fileName, doc.bucketFileName,
+                doc.imageURL, doc.dateAdded, doc.dateLastModified, JSON.stringify(doc.analyzedResults)
+            ]
+        );
+        await connection.end();
+        return result.insertId;
+    } catch (error) {
+        console.log(error);
+        throw error;
     }
-};
+}
 
 async function getReceiptInDB(receiptID) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("receipts");
-        const query = {_id: new ObjectId(receiptID)};
-        const result = await collection.findOne(query);
-        if (! result) {
+        const connection = await client.createConnection();
+        const sql = 'SELECT * FROM receipt WHERE _id = ?';
+        const result = await new Promise((resolve, reject) => {
+            connection.query(sql, [receiptID], function (err, result) {
+                if (err) reject(err);
+                resolve(result);
+            });
+        });
+        await connection.end();
+
+        if (result.length === 0) {
             throw new ReceiptDoesNotExistError(`No receipt found for receiptID ${receiptID}!`);
         }
-        return result;
-    } finally {
-        await client.close();
+
+        const receipt = result[0];
+        //   console.log(receipt);
+        // Handle the receipt data as needed
+        return receipt;
+    } catch (error) {
+        console.log(error);
+        throw error;
     }
-};
+}
 
 async function removeReceiptInDB(receiptID) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("receipts");
-        const query = {_id: new ObjectId(receiptID)}
-        const result = await collection.deleteOne(query);
-        if (result.deletedCount !== 1) {
-            throw new ReceiptDoesNotExistError(`No deletion occured for deleting ${receiptID}!`);
-        }
-    } finally {
-        await client.close();
-    }
-};
-
-async function getReceiptsInDB(userID) {
-    try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collectionReceipts = database.collection("receipts");
-        const collectionUsers = database.collection("users");
-        const getUserReceiptsQuery = { _id: new ObjectId(userID) };
-        const getUserReceiptsProjection = { projection: { receiptIDs: 1 }};
-        let {receiptIDs} = await collectionUsers.findOne(getUserReceiptsQuery, getUserReceiptsProjection);
-        receiptIDs = receiptIDs.map((receiptID) => {
-            return new ObjectId(receiptID);
+        const connection = await client.createConnection();
+        const sql = 'DELETE FROM receipt WHERE _id = ?';
+        const result = await new Promise((resolve, reject) => {
+            connection.query(sql, [receiptID], function (err, result) {
+                if (err) reject(err);
+                resolve(result);
+            });
         });
-        const query = { _id : { $in : receiptIDs }, userID: userID };
-        const result = await collectionReceipts.find(query).sort({"analyzedResults.invoice_date": -1, "dateAdded": -1}).toArray();
-        return result;
-    } finally {
-        await client.close();
+        await connection.end();
+
+        if (result.affectedRows !== 1) {
+            throw new ReceiptDoesNotExistError(`No deletion occurred for deleting ${receiptID}!`);
+        }
+    } catch (error) {
+        console.log(error);
+        throw error;
     }
-};
+}
+
+async function getReceiptsByUserIdInDB(userID) {
+    try {
+        const connection = await client.createConnection();
+
+        const getReceiptsQuery = `
+        SELECT r.*
+        FROM receipt r
+        JOIN user ur ON r.userID = ur._id
+        WHERE ur._id = ?
+      `;
+        const getReceiptsParams = [userID];
+        const receiptsResult = await new Promise((resolve, reject) => {
+            connection.query(getReceiptsQuery, getReceiptsParams, function (err, result) {
+                if (err) reject(err);
+                resolve(result);
+            });
+        });
+
+        await connection.end();
+
+        return receiptsResult;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
+
 
 async function getReceiptByUserIDAndBucketFileNameInDB(userID, bucketFileName) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("receipts");
-        const query = {userID: userID, bucketFileName: bucketFileName};
-        const result = await collection.findOne(query);
-        if (! result) {
+        const connection = await client.createConnection();
+
+        const query = 'SELECT * FROM receipt WHERE userID = ? AND bucketFileName = ?';
+        const params = [userID, bucketFileName];
+
+        const result = await new Promise((resolve, reject) => {
+            connection.query(query, params, function (err, rows) {
+                if (err) reject(err);
+                resolve(rows);
+            });
+        });
+
+        await connection.end();
+
+        if (result.length === 0) {
             throw new ReceiptDoesNotExistError(`No receipt found for userID ${userID} and bucketFileName ${bucketFileName}!`);
         }
-        return result;
-    } finally {
-        await client.close();
+
+        return result[0]
+      
+    } catch (error) {
+        console.log(error);
+        throw error;
     }
-};
+}
+
 
 async function updateReceiptInDB(receiptID, updatedFieldsDoc) {
     try {
-        await client.connect();
-        const database = client.db("bookkeeping");
-        const collection = database.collection("receipts");
-        const filter = { _id: new ObjectId(receiptID) };
-        const options = { 
-            upsert: false,
-            returnDocument: 'after'
-        };
-        const updateDoc = {
-            $set: updatedFieldsDoc
-        };
-        const result = await collection.findOneAndUpdate(filter, updateDoc, options);
-        if (! result) {
-            throw new ReceiptDoesNotExistError(`No receipt found for receiptID ${receiptID}!`);
-        }
-        return result.value;
-    } finally {
-        await client.close();
+      const connection = await client.createConnection();
+  
+      const query = 'UPDATE receipt SET dateLastModified = ?, analyzedResults = ? WHERE _id = ?';
+      const params = [
+        updatedFieldsDoc.dateLastModified,
+        JSON.stringify(updatedFieldsDoc.analyzedResults),
+        receiptID
+      ];
+  
+      const result = await new Promise((resolve, reject) => {
+        connection.query(query, params, function (err, rows) {
+          if (err) reject(err);
+          resolve(rows);
+        });
+      });
+  
+      await connection.end();
+  
+      if (result.affectedRows !== 1) {
+        throw new ReceiptDoesNotExistError(`No receipt found for receiptID ${receiptID}!`);
+      }
+  
+      return {
+        ...updatedFieldsDoc,
+        _id: receiptID,
+        analyzedResults: updatedFieldsDoc.analyzedResults,
+      };
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
+  }
+  
+
+module.exports = {
+    addReceiptInDB,
+    getReceiptInDB,
+    removeReceiptInDB,
+    getReceiptsByUserIdInDB,
+    getReceiptByUserIDAndBucketFileNameInDB,
+    updateReceiptInDB,
 };
 
-module.exports = {addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB, getReceiptByUserIDAndBucketFileNameInDB, updateReceiptInDB};
+
+
