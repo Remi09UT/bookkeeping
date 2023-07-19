@@ -16,7 +16,7 @@ async function addReceiptInDB(doc) {
                 doc.imageURL, doc.dateAdded, doc.dateLastModified, JSON.stringify(doc.analyzedResults)
             ]
         );
-        await connection.end();
+        // await connection.end();
         return result.insertId;
     } catch (error) {
         console.log(error);
@@ -34,7 +34,7 @@ async function getReceiptInDB(receiptID) {
                 resolve(result);
             });
         });
-        await connection.end();
+        // await connection.end();
 
         if (result.length === 0) {
             throw new ReceiptDoesNotExistError(`No receipt found for receiptID ${receiptID}!`);
@@ -60,7 +60,7 @@ async function removeReceiptInDB(receiptID) {
                 resolve(result);
             });
         });
-        await connection.end();
+        // await connection.end();
 
         if (result.affectedRows !== 1) {
             throw new ReceiptDoesNotExistError(`No deletion occurred for deleting ${receiptID}!`);
@@ -89,7 +89,7 @@ async function getReceiptsByUserIdInDB(userID) {
             });
         });
 
-        await connection.end();
+        // await connection.end();
 
         return receiptsResult;
     } catch (error) {
@@ -113,7 +113,7 @@ async function getReceiptByUserIDAndBucketFileNameInDB(userID, bucketFileName) {
             });
         });
 
-        await connection.end();
+        // await connection.end();
 
         if (result.length === 0) {
             throw new ReceiptDoesNotExistError(`No receipt found for userID ${userID} and bucketFileName ${bucketFileName}!`);
@@ -146,7 +146,7 @@ async function updateReceiptInDB(receiptID, updatedFieldsDoc) {
         });
       });
   
-      await connection.end();
+    //   await connection.end();
   
       if (result.affectedRows !== 1) {
         throw new ReceiptDoesNotExistError(`No receipt found for receiptID ${receiptID}!`);

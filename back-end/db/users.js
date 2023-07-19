@@ -13,7 +13,7 @@ async function registerUserInDB(username, password) {
           resolve(result);
         });
       });
-      await connection.end();
+    //   await connection.end();
       return result.insertId.toString();
     } catch (error) {
       console.log(error);
@@ -37,7 +37,7 @@ async function registerUserInDB(username, password) {
           resolve(result);
         });
       });
-      await connection.end();
+    //   await connection.end();
       return result[0].count > 0;
     } catch (error) {
       console.log(error);
@@ -56,7 +56,7 @@ async function registerUserInDB(username, password) {
           resolve(result);
         });
       });
-      await connection.end();
+    //   await connection.end();
       if (result.length === 0) {
         throw new UserDoesNotExistError(`Username does not exist: ${un}`);
       }
@@ -168,20 +168,17 @@ module.exports = {
 };
 
 
-// async function checkUsernameExistence() {
-//     const userID = 'aaa';
-//     const receiptID = 'receipt456';
-    
+// async function exampleUsage() {
 //     try {
-//       const { user, receipt } = await addReceiptToUserInDB(userID, receiptID);
-//       console.log('Receipt added to user successfully:');
-//       console.log('User:', user);
-//       console.log('Receipt:', receipt);
+//       // Call the functions
+//       await registerUserInDB('johnhhh', 'password123');
+//       console.log("Registered user!");
+//       await getUserByUsernameInDB('johnhhh');
 //     } catch (error) {
-//       console.error('Failed to add receipt to user:', error);
+//       console.log(error);
+//       // Handle the error
+//       // ...
 //     }
-    
 //   }
   
-//   // Call the async function
-//   checkUsernameExistence();
+//   exampleUsage();
