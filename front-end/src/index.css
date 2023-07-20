@@ -72,5 +72,9 @@ body{
   border: 3px solid white;
 }
 
+ul{
+  white-space: pre-wrap;
+}
+
 
 

@@ -5,7 +5,14 @@ import Table from "./Table";
 import Modal from "./Modal";
 import URL from "../config/URLConfig";
 import axios from "axios";
-import { Button } from "@mui/material";
+import {
+  Button,
+  Flex,
+  Box,
+  Divider,
+  Heading,
+  Spacer,
+} from "@chakra-ui/react";
 
 function Home() {
   const [img, setImg] = useState(null);
@@ -35,11 +42,17 @@ function Home() {
   return (
     receipts && (
       <div className="App">
-        <div className="Log-off">
-          <Button variant="contained" onClick={handleLogout}>
+        <Divider />
+        <Flex minWidth="max-content" alignItems="center" gap="2">
+          <Box p="2">
+            <Heading size='3xl'>Reciept Managing App</Heading>
+          </Box>
+          <Spacer />
+          <Button size="lg" colorScheme="teal" onClick={handleLogout}>
             Sign Out
           </Button>
-        </div>
+        </Flex>
+        <Divider />
         <Title amount={amount} />
         <UploadForm />
         <Table setImg={setImg} receipts={receipts} />
