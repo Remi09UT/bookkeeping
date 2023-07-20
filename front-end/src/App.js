@@ -8,9 +8,11 @@ import {
 import Home from "./comps/Home";
 import LoginPage from "./comps/LoginPage";
 import RegisterPage from "./comps/RegisterPage";
+import { ChakraProvider } from '@chakra-ui/react'
 
 function App() {
   return (
+    <ChakraProvider>
     <Router>
       <Routes>
         <Route exact path="/" element={<Navigate to="/login" />} />
@@ -28,6 +30,7 @@ function App() {
         />
       </Routes>
     </Router>
+    </ChakraProvider>
   );
 }
 

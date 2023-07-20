@@ -1,5 +1,5 @@
-import Box from "@mui/material/Box";
-import LinearProgress from "@mui/material/LinearProgress";
+import { Box } from '@chakra-ui/react'
+import { Progress } from '@chakra-ui/react'
 import { useEffect, useRef } from "react";
 import axios from "axios";
 import URL from "../config/URLConfig";
@@ -52,7 +52,7 @@ export default function ProgressBar({ file, setFile, setStatus }) {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <LinearProgress />
+      <Progress isIndeterminate/>
     </Box>
   );
 }

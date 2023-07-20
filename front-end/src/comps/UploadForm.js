@@ -1,7 +1,6 @@
 import React from "react";
 import { useState } from "react";
-import Button from "@mui/material/Button";
-import Alert from "@mui/material/Alert";
+import { Alert, Button } from "@chakra-ui/react";
 import ProgressBar from "./ProgressBar";
 
 export default function UploadForm() {
@@ -10,22 +9,31 @@ export default function UploadForm() {
   const [status, setStatus] = useState("Upload a picture!");
 
   const types = ["image/png", "image/jpeg"];
-  const changeHandler = (e) => {
-    let selected = e.target.files[0];
 
-    if (selected && types.includes(selected.type)) {
-      setFile(selected);
-      setError("");
-    } else {
-      setFile(null);
-      setError("Please select an image (png or jpeg)");
-    }
+  const uploadImage = () => {
+    let input = document.createElement("input");
+    input.type = "file";
+    input.onchange = (_) => {
+      // you can use this method to get file and perform respective operations
+      let files = Array.from(input.files);
+      let selected = files[0];
+      console.log(selected);
+
+      if (selected && types.includes(selected.type)) {
+        setFile(selected);
+        setError("");
+      } else {
+        setFile(null);
+        setError("Please select an image (png or jpeg)");
+      }
+    };
+    input.click();
   };
+
   return (
     <form>
-      <Button variant="contained" component="label" onChange={changeHandler}>
+      <Button colorScheme="teal" component="label" onClick={uploadImage}>
         Upload
-        <input type="file" hidden />
       </Button>
       <span> {status} </span>
       <div className="output">

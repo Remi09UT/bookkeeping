@@ -1,50 +1,18 @@
 import React from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import SmartTable from "react-next-table";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import URL from "../config/URLConfig";
-import Button from "@mui/material/Button";
-
-const headCells = [
-  {
-    id: "date",
-    numeric: false,
-    label: "Date",
-    width: 200,
-  },
-  {
-    id: "vendor",
-    numeric: false,
-    label: "Vendor",
-    width: 200,
-  },
-  {
-    id: "description",
-    numeric: false,
-    label: "Description",
-    width: 200,
-  },
-  {
-    id: "amount",
-    numeric: true,
-    //sortable: true,
-    label: "Amount",
-    width: 100,
-  },
-  {
-    id: "url",
-    numeric: false,
-    label: "Image",
-    width: 200,
-  },
-  {
-    id: "delete",
-    numeric: false,
-    label: "",
-    width: 100,
-  },
-];
+import { DeleteIcon } from "@chakra-ui/icons";
+import {
+  Button,
+  Table as UITable,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  TableContainer,
+} from "@chakra-ui/react";
 
 export default function Table({ setImg, receipts }) {
   const [data, setData] = useState(null);
@@ -79,11 +47,7 @@ export default function Table({ setImg, receipts }) {
           height="200"
         />
       ),
-      delete: (
-        <Button variant="contained" onClick={() => handleClick(receipt._id)}>
-          Delete
-        </Button>
-      ),
+      id: receipt._id
     }));
     setData(extractedData);
     // window.location.reload();
@@ -113,19 +77,47 @@ export default function Table({ setImg, receipts }) {
     getDocs();
   }, [receipts]);
 
+  const dataTable =
+    data == null ? (
+      <></>
+    ) : (
+      data.map((item) => (
+        <Tr key={item.id}>
+          <Td>{item.date}</Td>
+          <Td>{item.vendor}</Td>
+          <Td>{item.description}</Td>
+          <Td>{item.amount}</Td>
+          <Td>{item.url}</Td>
+          <Td>
+            <Button
+              colorScheme="red"
+              variant="outline"
+              onClick={() => handleClick(item.id)}
+            >
+              <DeleteIcon />
+            </Button>
+          </Td>
+        </Tr>
+      ))
+    );
+
   return (
     data && (
-      <div>
-        {data.length > 0 && (
-          <SmartTable
-            data={data}
-            headCells={headCells}
-            // url="/api/admin/emails"
-            searchDebounceTime={800}
-            // noPagination
-          />
-        )}
-      </div>
+      <TableContainer>
+        <UITable variant="striped" size="lg">
+          <Thead>
+            <Tr>
+              <Th>Date</Th>
+              <Th>Vendor</Th>
+              <Th>Description</Th>
+              <Th>Amount</Th>
+              <Th>Image</Th>
+              <Th/>
+            </Tr>
+          </Thead>
+          <Tbody>{dataTable}</Tbody>
+        </UITable>
+      </TableContainer>
     )
   );
 }

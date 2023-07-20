@@ -18,10 +18,11 @@ let getCloudStorageUploadURLRoute = async (req, res) => {
     let url;
     try {
         url = await getV4UploadSignedUrl(userID, bucketFileName);
+        res.status(201).send({bucketFileName, url});
     } catch (error) {
         res.status(error.status || 400).send({...error, message: error.message});
     }
-    res.status(201).send({bucketFileName, url});
+    
 };
 
 let uploadsRouter = express.Router();

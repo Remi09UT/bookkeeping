@@ -7,7 +7,7 @@ const usersRouter = require('./routes/users');
 const { tokenAuth, basicAuth } = require('./lib/auth');
 const receiptsRouter = require('./routes/receipts');
 
-const PORT = 3000;
+const PORT = 3001;
 
 let app = express();
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const { requireAuth } = require('../lib/auth');
 const bodyParser = require('body-parser');
-const { addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsInDB, getReceiptByUserIDAndBucketFileNameInDB, updateReceiptInDB } = require('../db/receipts');
+const { addReceiptInDB, getReceiptInDB, removeReceiptInDB, getReceiptsByUserIdInDB, getReceiptByUserIDAndBucketFileNameInDB, updateReceiptInDB } = require('../db/receipts');
 const getV4ReadSignedUrl = require('../lib/generate-v4-read-signed-url');
 const {analyzeFileByDocumentAI, matchEntityTypes, lineItemEntityTypes, numberEntityTypes, priceEntityTypes} = require('../lib/document-ai');
 const {fileTypeChecker, getContentType} = require('../lib/support-file-type');
@@ -88,7 +88,7 @@ let userAddReceiptRoute = async (req, res) => { // Probably add a middleware to 
     res.status(201).send({...doc, message: "The receipt record will appear on your account in a few seconds."}); // check receiptID key repetition in returned doc
     try {
         const receiptID = await addReceiptInDB({...doc, analyzedResults: receiptContent});
-        const receiptIDs = await addReceiptToUserInDB(userID, receiptID);
+        // const receiptIDs = await addReceiptToUserInDB(userID, receiptID);
         // const clientGetImageURL = await getV4ReadSignedUrl(userID, bucketFileName); // check if necessary, or return to client an image processed by the Document AI
     } catch (error) {
         console.log({...error, message: error.message});
@@ -120,9 +120,12 @@ let userRemoveReceiptRoute = async (req, res) => {
     }
     // Remove from MongoDB Atlas
     try {
+        // await removeReceiptInDB(receiptID);
+        // const receiptIDs = await removeReceiptFromUserInDB(userID, receiptID);
+        // res.status(200).send({receiptIDs});
         await removeReceiptInDB(receiptID);
-        const receiptIDs = await removeReceiptFromUserInDB(userID, receiptID);
-        res.status(200).send({receiptIDs});
+        // const receiptIDs = await removeReceiptFromUserInDB(userID, receiptID);
+        res.status(200).send({receiptID});
     } catch (error) {
         res.status(error.status || 400).send({...error, message: error.message || `Error in userRemoveReceiptRoute() for user ${userID} removing record ${receiptID} in DB!`});
     }
@@ -151,7 +154,8 @@ let userGetAllReceiptsRoute = async (req, res) => {
     // Get document from MongoDB Atlas
     let receiptRecords;
     try {
-        receiptRecords = await getReceiptsInDB(userID);
+        // changed the function name
+        receiptRecords = await getReceiptsByUserIdInDB(userID);
     } catch (error) {
         res.status(error.status || 400).send({...error, message: error.message || `Error in userGetAllReceiptsRoute() for user ${userID} retrieving record ${receiptID} in DB!`});
         return;

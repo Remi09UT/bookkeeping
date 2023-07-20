@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import axios from "axios";
+import LoginImage from "../static/login.png";
 import {
-  MDBBtn,
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCard,
-  MDBCardBody,
-  MDBCardImage,
-  MDBInput,
-  MDBIcon,
-} from "mdb-react-ui-kit";
+  Center,
+  Card,
+  Input,
+  Container,
+  CardBody,
+  Image,
+  Stack,
+  Heading,
+  Button,
+} from "@chakra-ui/react";
 import URL from "../config/URLConfig";
 
 function RegisterPage() {
@@ -32,71 +33,61 @@ function RegisterPage() {
       })
       .catch((error) => {
         // Handle any errors that occurred during the request
-        if(error.response)
-          alert(error.response.data.message);
-        else 
-          alert(error);
-        setUsername("")
-        setPassword("")
+        if (error.response) alert(error.response.data.message);
+        else alert(error);
+        setUsername("");
+        setPassword("");
       });
   }
 
   return (
-    <MDBContainer fluid>
-      <MDBCard className="text-black m-5" style={{ borderRadius: "25px" }}>
-        <MDBCardBody>
-          <MDBRow>
-            <MDBCol
-              md="10"
-              lg="6"
-              className="order-2 order-lg-1 d-flex flex-column align-items-center"
-            >
-              <p className="text-center h1 fw-bold mb-5 mx-1 mx-md-4 mt-4">
+    <Container mt={20} borderRadius="lg">
+      <Card
+        direction={{ base: "column", sm: "row" }}
+        overflow="hidden"
+        variant="outline"
+      >
+        <CardBody>
+          <Image src={LoginImage} alt="Login Image" borderRadius="lg" />
+          <Stack mt="6" spacing="3">
+            <Center>
+              <Heading position="relative" size="2xl">
                 Sign up
-              </p>
-
-              <div className="d-flex flex-row align-items-center mb-4 ">
-                <MDBIcon fas icon="user me-3" size="lg" />
-                <MDBInput
-                  label="Username"
-                  id="form1"
-                  type="text"
-                  className="w-100"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
-
-              <div className="d-flex flex-row align-items-center mb-4">
-                <MDBIcon fas icon="lock me-3" size="lg" />
-                <MDBInput
-                  label="Password"
-                  id="form3"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-
-              <MDBBtn className="mb-4" size="lg" onClick={handleRegister}>
+              </Heading>
+            </Center>
+            <Input
+            placeholder="Username"
+              label="Username"
+              id="form1"
+              type="text"
+              className="w-100"
+              size="lg"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            <Input
+            placeholder="Password" 
+              label="Password"
+              id="form3"
+              size="lg"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <Center mt={10}>
+              <Button
+                colorScheme="purple"
+                variant="solid"
+                size="lg"
+                onClick={handleRegister}
+              >
                 Register
-              </MDBBtn>
-            </MDBCol>
-
-            <MDBCol
-              md="10"
-              lg="6"
-              className="order-1 order-lg-2 d-flex align-items-center"
-            >
-              <MDBCardImage
-                src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-registration/draw1.webp"
-                fluid
-              />
-            </MDBCol>
-          </MDBRow>
-        </MDBCardBody>
-      </MDBCard>
-    </MDBContainer>
+              </Button>
+            </Center>
+          </Stack>
+        </CardBody>
+      </Card>
+    </Container>
   );
 }
 
