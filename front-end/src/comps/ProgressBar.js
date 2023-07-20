@@ -11,6 +11,7 @@ export default function ProgressBar({ file, setFile, setStatus }) {
     try {
       setStatus("Uploading receipt~");
       const JWT = sessionStorage.getItem("bookKeepingCredential");
+      console.log(JWT);
       const storageInfo = await axios.get(
         URL + "uploads/static/" + receipt.name,
         {
