@@ -28,7 +28,6 @@ export default function UploadForm() {
       }
     };
     input.click();
-    setIsUploading(true);
   };
 
   return (
